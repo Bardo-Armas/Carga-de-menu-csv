@@ -6,20 +6,34 @@ class EnvLoader {
             const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
             
             if (isProduction) {
-                const response = await fetch('/api/env');
-                if (response.ok) {
-                    const envVars = await response.json();
+                try {
+                    const response = await fetch('/api/env');
+                    
+                    // Verificar si la respuesta está vacía
+                    const responseText = await response.text();
+                    if (!responseText || responseText.trim() === '') {
+                        throw new Error('Respuesta vacía del servidor');
+                    }
+                    
+                    // Intentar parsear el JSON
+                    let envVars;
+                    try {
+                        envVars = JSON.parse(responseText);
+                    } catch (jsonError) {
+                        console.error('Error parseando JSON:', responseText);
+                        throw new Error(`Error parseando JSON: ${jsonError.message}`);
+                    }
                     
                     // Verificar que las variables críticas estén presentes
                     if (!envVars.API_BASE_URL || !envVars.LOGIN_API_URL) {
-                        throw new Error('Variables de entorno críticas no configuradas en Vercel');
+                        throw new Error('Variables de entorno críticas no configuradas en Netlify');
                     }
                     
                     window.ENV = envVars;
                     return envVars;
-                } else {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Error cargando configuración');
+                } catch (fetchError) {
+                    console.error('Error obteniendo variables de entorno:', fetchError);
+                    throw new Error(`Error de API: ${fetchError.message}`);
                 }
             } else {
                 // En desarrollo, intentar cargar el archivo .env

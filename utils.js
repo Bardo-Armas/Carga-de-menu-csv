@@ -134,3 +134,36 @@ if (!document.getElementById('utilsStyles')) {
     `;
     document.head.appendChild(style);
 }
+
+// Añadir esta función a tu archivo utils.js existente
+
+Utils.fetchJSON = async function(url, options = {}) {
+    try {
+        const response = await fetch(url, options);
+        
+        // Verificar si la respuesta está vacía
+        const responseText = await response.text();
+        if (!responseText || responseText.trim() === '') {
+            throw new Error('Respuesta vacía del servidor');
+        }
+        
+        // Intentar parsear el JSON
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (jsonError) {
+            console.error('Error parseando JSON:', responseText);
+            throw new Error(`Error parseando JSON: ${jsonError.message}`);
+        }
+        
+        // Devolver objeto con datos y estado de la respuesta
+        return {
+            ok: response.ok,
+            status: response.status,
+            data: data
+        };
+    } catch (error) {
+        console.error('Error en fetchJSON:', error);
+        throw error;
+    }
+};
