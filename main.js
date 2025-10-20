@@ -842,30 +842,5 @@ async function loadRestaurantsByCategory(categoryId) {
     }
 }
 
-// Eliminar las asignaciones duplicadas de las líneas 819-820
-// window.loadCategories = loadCategories;
-// window.loadRestaurantsByCategory = loadRestaurantsByCategory;
+window.loadRestaurantsByCategory = loadRestaurantsByCategory;
 
-// Función para cargar restaurantes por categoría
-async function loadRestaurantsByCategory(categoryId) {
-    try {
-        const config = await getConfigCache();
-        const url = `${config.API_BASE_URL}/restaurants/category/${categoryId}`;
-        
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const result = await response.json();
-        if (result.success) {
-            // Manejar la respuesta de restaurantes
-            console.log('Restaurantes cargados:', result.data);
-        } else {
-            throw new Error(result.message || 'Error al cargar restaurantes');
-        }
-    } catch (error) {
-        console.error('Error cargando restaurantes:', error);
-        alert(`Error al cargar restaurantes: ${error.message}`);
-    }
-}
