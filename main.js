@@ -13,6 +13,10 @@ let currentRestaurants = [];
 let currentProducts = [];
 let groupedProducts = {};
 
+let restaurants = [];
+let products = [];
+let CONFIG_CACHE = null;
+
 // Función para abrir modal de productos
 function openProductsModal() {
     const modal = document.getElementById('productsModal');
@@ -790,3 +794,38 @@ document.addEventListener('DOMContentLoaded', function() {
     Utils.setupFileInput('variationsFile');
     Utils.setupFileInput('complementsFile');
 });
+
+// Variables globales
+
+
+// Función para obtener configuración
+async function getConfigCache() {
+    if (!CONFIG_CACHE) {
+        CONFIG_CACHE = await window.getConfig();
+    }
+    return CONFIG_CACHE;
+}
+
+// Función para cargar restaurantes por categoría
+async function loadRestaurantsByCategory(categoryId) {
+    try {
+        const config = await getConfigCache();
+        const response = await fetch(`${config.API_BASE_URL}/restaurants/category/${categoryId}`);
+        
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            restaurants = data.data || [];
+            renderRestaurants();
+        } else {
+            throw new Error(data.message || 'Error al cargar restaurantes');
+        }
+    } catch (error) {
+        console.error('Error cargando restaurantes:', error);
+        showNotification('Error al cargar restaurantes: ' + error.message, 'error');
+    }
+}

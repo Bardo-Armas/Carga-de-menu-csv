@@ -57,26 +57,26 @@ class AuthManager {
             if (response.ok && data.success) {
                 // Validar que el usuario tenga un rol permitido
                 const userRole = data.data.role;
-                if (!this.isRoleAllowed(userRole)) {
+                
+                if (this.isRoleAllowed(userRole)) {
+                    // Guardar datos del usuario y sesión
+                    localStorage.setItem(this.config.AUTH_USER_KEY, JSON.stringify(data.data));
+                    localStorage.setItem(this.config.AUTH_SESSION_KEY, JSON.stringify({
+                        token: data.token,
+                        timestamp: Date.now()
+                    }));
+                    
+                    // Redirigir al dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
                     throw new Error(`Acceso denegado. Rol '${userRole}' no autorizado.`);
                 }
-                
-                // Guardar datos del usuario y sesión
-                localStorage.setItem(CONFIG.AUTH_USER_KEY, JSON.stringify(data.data));
-                localStorage.setItem(CONFIG.AUTH_SESSION_KEY, JSON.stringify({
-                    loginTime: new Date().toISOString(),
-                    role: userRole,
-                    userId: data.data.id
-                }));
-                
-                // Redirigir a la página principal
-                window.location.href = 'dashboard.html';  // Y aquí
             } else {
-                throw new Error(data.message || 'Error de autenticación');
+                throw new Error(data.message || 'Credenciales inválidas');
             }
         } catch (error) {
             console.error('Error en login:', error);
-            errorMessage.textContent = error.message || 'Error de conexión. Intente nuevamente.';
+            errorMessage.textContent = error.message;
             errorMessage.style.display = 'block';
         } finally {
             loginBtn.disabled = false;
@@ -85,28 +85,26 @@ class AuthManager {
     }
     
     isRoleAllowed(role) {
-        return CONFIG.ALLOWED_ROLES.includes(role);
+        return this.config.ALLOWED_ROLES.includes(role);
     }
     
     isAuthenticated() {
         const user = this.getUser();
         const session = this.getSession();
         
-        if (!user || !session) {
-            return false;
+        if (user && session) {
+            return true;
         }
-        
-        // Verificar que el rol siga siendo válido
-        return this.isRoleAllowed(user.role);
+        return false;
     }
     
     getUser() {
-        const userStr = localStorage.getItem(CONFIG.AUTH_USER_KEY);
+        const userStr = localStorage.getItem(this.config?.AUTH_USER_KEY || 'auth_user');
         return userStr ? JSON.parse(userStr) : null;
     }
     
     getSession() {
-        const sessionStr = localStorage.getItem(CONFIG.AUTH_SESSION_KEY);
+        const sessionStr = localStorage.getItem(this.config?.AUTH_SESSION_KEY || 'auth_session');
         return sessionStr ? JSON.parse(sessionStr) : null;
     }
     
@@ -116,8 +114,7 @@ class AuthManager {
     }
     
     hasRole(role) {
-        const userRole = this.getUserRole();
-        return userRole === role;
+        return this.getUserRole() === role;
     }
     
     hasAnyRole(roles) {
@@ -125,54 +122,54 @@ class AuthManager {
         return roles.includes(userRole);
     }
     
-    logout() {
-        localStorage.removeItem(CONFIG.AUTH_USER_KEY);
-        localStorage.removeItem(CONFIG.AUTH_SESSION_KEY);
+    async logout() {
+        if (!this.config) {
+            this.config = await window.getConfig();
+        }
+        localStorage.removeItem(this.config.AUTH_USER_KEY);
+        localStorage.removeItem(this.config.AUTH_SESSION_KEY);
         window.location.href = 'index.html';
     }
     
-    // Middleware para proteger rutas
-    requireAuth() {
+    async requireAuth() {
         if (!this.isAuthenticated()) {
-            window.location.href = 'index.html'; 
+            window.location.href = 'index.html';
             return false;
         }
         return true;
     }
     
-    // Middleware para requerir roles específicos
-    requireRole(requiredRoles) {
+    async requireRole(requiredRoles) {
+        if (!this.config) {
+            this.config = await window.getConfig();
+        }
+        
         if (!this.requireAuth()) {
             return false;
         }
         
         const userRole = this.getUserRole();
-        const rolesArray = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
-        
-        if (!rolesArray.includes(userRole)) {
-            alert(`Acceso denegado. Se requiere uno de estos roles: ${rolesArray.join(', ')}`);
+        if (!requiredRoles.includes(userRole)) {
+            alert(`Acceso denegado. Se requiere uno de estos roles: ${requiredRoles.join(', ')}`);
             return false;
         }
         
         return true;
     }
     
-    // Headers para peticiones (sin token, solo información de sesión)
     getAuthHeaders() {
-        const user = this.getUser();
-        return {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-User-ID': user ? user.id.toString() : '',
-            'X-User-Role': user ? user.role : ''
-        };
+        const session = this.getSession();
+        if (session && session.token) {
+            return {
+                'Authorization': `Bearer ${session.token}`
+            };
+        }
+        return {};
     }
 }
 
-// Inicializar el sistema de autenticación
 const authManager = new AuthManager();
 
-// Exportar para uso global
 if (typeof window !== 'undefined') {
     window.AuthManager = authManager;
 }
