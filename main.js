@@ -226,8 +226,19 @@ async function loadProducts(restaurantId, restaurantName) {
             </div>
         `;
         
+        // Obtener la URL de la API de forma segura
+        let apiBaseUrl;
+        try {
+            const config = await getConfigCache();
+            apiBaseUrl = config.API_BASE_URL;
+        } catch (configError) {
+            console.error('Error obteniendo configuración:', configError);
+            // Fallback a una variable global si existe
+            apiBaseUrl = window.API_BASE_URL || 'https://da-pw.tupide.mx/api/menu-mc';
+        }
+        
         // Cargar productos
-        const response = await fetch(`${API_BASE_URL}/products/restaurant/${restaurantId}`);
+        const response = await fetch(`${apiBaseUrl}/products/restaurant/${restaurantId}`);
         const result = await response.json();
         
         if (result.success && result.data) {
@@ -564,7 +575,31 @@ function downloadProductsExample() {
     const csvContent = `Establecimiento,Categoria,Subcategoria,Nombre,Descripcion,Precio,Imagen
 La Barra De Pizza,Pizzas,Especialidades,Pizza Hawaiana,Deliciosa pizza con piña y jamón,180,https://example.com/pizza.jpg`;
     
-    Utils.downloadCSV(csvContent, 'ejemplo_productos.csv');
+   // Crear un elemento <a> invisible
+    const link = document.createElement('a');
+    
+    // Crear un blob con el contenido CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Crear una URL para el blob
+    const url = URL.createObjectURL(blob);
+    
+    // Configurar el enlace
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'ejemplo_productos.csv');
+    link.style.visibility = 'hidden';
+    
+    // Añadir el enlace al DOM
+    document.body.appendChild(link);
+    
+    // Simular clic en el enlace
+    link.click();
+    
+    // Limpiar: eliminar el enlace del DOM
+    document.body.removeChild(link);
+    
+    // Liberar la URL del objeto
+    URL.revokeObjectURL(url);
 }
 
 // Función para descargar ejemplo de complementos
@@ -574,7 +609,31 @@ La Barra De Pizza,Salsa macha,10,"6410,6411,6413,6414,6415,6412"
 La Barra De Pizza,Salsa de habanero,5,"6410,6411,6413,6414,6415,6412"
 La Barra De Pizza,Dips,10,"6410,6411,6413,6414,6415,6412"`;
     
-    Utils.downloadCSV(csvContent, 'ejemplo_complementos.csv');
+    // Crear un elemento <a> invisible
+    const link = document.createElement('a');
+    
+    // Crear un blob con el contenido CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Crear una URL para el blob
+    const url = URL.createObjectURL(blob);
+    
+    // Configurar el enlace
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'ejemplo_complementos.csv');
+    link.style.visibility = 'hidden';
+    
+    // Añadir el enlace al DOM
+    document.body.appendChild(link);
+    
+    // Simular clic en el enlace
+    link.click();
+    
+    // Limpiar: eliminar el enlace del DOM
+    document.body.removeChild(link);
+    
+    // Liberar la URL del objeto
+    URL.revokeObjectURL(url);
 }
 
 // Event listeners para cerrar modales
