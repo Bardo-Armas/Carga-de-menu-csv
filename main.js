@@ -48,8 +48,17 @@ async function openRestaurantsModal(categoryId, categoryName) {
         `;
         
         // Cargar restaurantes
-        const config = await getConfigCache();
-        const response = await fetch(`${config.API_BASE_URL}/restaurants/category/${categoryId}`);
+        let apiBaseUrl;
+        try {
+            const config = await getConfigCache();
+            apiBaseUrl = config.API_BASE_URL;
+        } catch (configError) {
+            console.error('Error obteniendo configuración:', configError);
+            // Fallback a una variable global si existe
+            apiBaseUrl = window.API_BASE_URL || 'https://da-pw.tupide.mx/api/menu-mc';
+        }
+        
+        const response = await fetch(`${apiBaseUrl}/restaurants/category/${categoryId}`);
         const result = await response.json();
         
         if (result.success && result.data) {

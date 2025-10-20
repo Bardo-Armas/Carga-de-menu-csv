@@ -2266,15 +2266,7 @@ La Barra De Pizza,Masa,Seleccione su masa,TRUE,Original,0,TRUE,"6410,6411,6413,6
 La Barra De Pizza,Masa,Seleccione su masa,TRUE,Delgada,0,FALSE,"6410,6411,6413,6414,6415"
 La Barra De Pizza,Masa,Seleccione su masa,TRUE,Italiana,20,FALSE,"6410,6411,6413,6414,6415"`;
             
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', 'ejemplo_variaciones.csv');
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            Utils.downloadCSV(csvContent, 'ejemplo_variaciones.csv');
         }
 
         // Función para descargar ejemplo de productos CSV
@@ -2284,15 +2276,7 @@ La Barra De Pizza,Pizza Margherita,Pizza clásica con tomate y mozzarella,150,Pi
 La Barra De Pizza,Pizza Pepperoni,Pizza con pepperoni y mozzarella,180,Pizzas,Activo
 La Barra De Pizza,Ensalada César,Ensalada fresca con aderezo césar,120,Ensaladas,Activo`;
             
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', 'ejemplo_productos.csv');
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            Utils.downloadCSV(csvContent, 'ejemplo_productos.csv');
         }
         
         // Función para descargar ejemplo de complementos
@@ -2302,16 +2286,9 @@ La Barra De Pizza,Salsa macha,10,"6410,6411,6413,6414,6415,6412"
 La Barra De Pizza,Salsa de habanero,5,"6410,6411,6413,6414,6415,6412"
 La Barra De Pizza,Dips,10,"6410,6411,6413,6414,6415,6412"`;
             
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', 'ejemplo_complementos.csv');
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            Utils.downloadCSV(csvContent, 'ejemplo_complementos.csv');
         }
     </script>
+    <script src="utils.js"></script>
 </body>
 </html>
