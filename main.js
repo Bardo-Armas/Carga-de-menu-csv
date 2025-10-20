@@ -504,8 +504,18 @@ async function uploadFile(file, endpoint, progressId, progressBarId, resultId, b
     btnElement.disabled = true;
     
     try {
-        const config = await getConfigCache();
-        const response = await fetch(`${config.API_BASE_URL}${endpoint}`, {
+        // Obtener la URL base de la API de forma segura
+        let apiBaseUrl;
+        try {
+            const config = await getConfigCache();
+            apiBaseUrl = config.API_BASE_URL;
+        } catch (configError) {
+            console.error('Error obteniendo configuración:', configError);
+            // Fallback a una variable global si existe
+            apiBaseUrl = window.API_BASE_URL || 'https://da-pw.tupide.mx/api/menu-mc';
+        }
+        
+        const response = await fetch(`${apiBaseUrl}${endpoint}`, {
             method: 'POST',
             body: formData
         });
@@ -524,7 +534,7 @@ async function uploadFile(file, endpoint, progressId, progressBarId, resultId, b
         console.error('Error:', error);
         progressElement.style.display = 'none';
         resultElement.style.display = 'block';
-        resultElement.innerHTML = `<div class="error">✗ Error de conexión</div>`;
+        resultElement.innerHTML = `<div class="error">✗ Error de conexión: ${error.message}</div>`;
     } finally {
         btnElement.disabled = false;
     }
