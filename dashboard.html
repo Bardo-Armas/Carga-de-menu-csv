@@ -390,5 +390,18 @@
             }
         });
     </script>
+    <!-- Inicialización de inputs de archivo -->
+    <script>
+        // Esperar a que el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar que Utils existe y tiene la función setupFileInput
+            if (typeof Utils !== 'undefined' && Utils.setupFileInput) {
+                Utils.setupFileInput('variationsFile');
+                Utils.setupFileInput('complementsFile');
+            } else {
+                console.error('Utils no está disponible o setupFileInput no está definido');
+            }
+        });
+    </script>
 </body>
 </html>
