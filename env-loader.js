@@ -23,20 +23,29 @@ class EnvLoader {
                 }
             } else {
                 // En desarrollo, intentar cargar el archivo .env
-                const response = await fetch('./.env');
-                if (response.ok) {
-                    const envText = await response.text();
-                    const envVars = this.parseEnv(envText);
-                    window.ENV = envVars;
-                    return envVars;
-                } else {
-                    // Check content type to avoid parsing HTML as JSON
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('text/html')) {
-                        console.warn('Received HTML response instead of .env file');
-                        throw new Error('Archivo .env no encontrado en desarrollo');
+                try {
+                    const response = await fetch('./.env');
+                    if (response.ok) {
+                        const envText = await response.text();
+                        const envVars = this.parseEnv(envText);
+                        window.ENV = envVars;
+                        return envVars;
+                    } else {
+                        console.warn('Archivo .env no encontrado, usando valores por defecto para desarrollo');
+                        // Valores por defecto para desarrollo
+                        const defaultEnvVars = {
+                            API_BASE_URL: 'https://da-pw.tupide.mx/api/menu-mc',
+                            LOGIN_API_URL: 'https://control.da-pw.mx/api/panel-administrativo/admins/subitoInterno',
+                            AUTH_USER_KEY: 'auth_user',
+                            AUTH_SESSION_KEY: 'auth_session',
+                            ALLOWED_ROLES: 'Call-center,Administrador,Dirección'
+                        };
+                        window.ENV = defaultEnvVars;
+                        return defaultEnvVars;
                     }
-                    throw new Error('Archivo .env no encontrado en desarrollo');
+                } catch (error) {
+                    console.error('Error cargando .env:', error);
+                    throw new Error('Error cargando configuración de desarrollo');
                 }
             }
         } catch (error) {
