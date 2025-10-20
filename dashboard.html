@@ -313,7 +313,10 @@
     
     <script>
         // Proteger la página principal
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Esperar a que se cargue la configuración
+            await window.envLoaded;
+            
             if (!AuthManager.requireAuth()) {
                 return;
             }

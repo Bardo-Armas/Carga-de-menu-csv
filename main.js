@@ -1,5 +1,3 @@
-// Configuración de la API
-const API_BASE_URL = 'http://127.0.0.1:8002/api/menu-mc';
 // Variables globales para categorías
 let categories = [];
 let selectedCategoryId = null;
@@ -782,12 +780,37 @@ document.getElementById('productsModal').addEventListener('transitionend', funct
 
 // Inicialización cuando se carga el DOM
 document.addEventListener('DOMContentLoaded', async function() {
+    // Esperar a que se cargue la configuración
+    await window.envLoaded;
+    
+    // Cargar categorías
     await loadCategories();
     
     // Configurar inputs de archivo
-    Utils.setupFileInput('productsFile');
-    Utils.setupFileInput('variationsFile');
-    Utils.setupFileInput('complementsFile');
+    const variationsInput = document.getElementById('variationsFile');
+    const productsInput = document.getElementById('productsFile');
+    const complementsInput = document.getElementById('complementsFile');
+    
+    if (variationsInput) {
+        variationsInput.addEventListener('change', function() {
+            const fileName = this.files[0]?.name || 'Ningún archivo seleccionado';
+            document.getElementById('variationsFileName').textContent = fileName;
+        });
+    }
+    
+    if (productsInput) {
+        productsInput.addEventListener('change', function() {
+            const fileName = this.files[0]?.name || 'Ningún archivo seleccionado';
+            document.getElementById('productsFileName').textContent = fileName;
+        });
+    }
+    
+    if (complementsInput) {
+        complementsInput.addEventListener('change', function() {
+            const fileName = this.files[0]?.name || 'Ningún archivo seleccionado';
+            document.getElementById('complementsFileName').textContent = fileName;
+        });
+    }
 });
 
 // Función para obtener configuración (cache)
