@@ -1,15 +1,10 @@
-// Variables globales para categorías
+// Variables globales
 let categories = [];
 let selectedCategoryId = null;
-
-// Variables globales para restaurantes
 let selectedRestaurant = null;
 let currentRestaurants = [];
-
-// Variables globales para productos
 let currentProducts = [];
 let groupedProducts = {};
-
 let restaurants = [];
 let products = [];
 let CONFIG_CACHE = null;
@@ -165,45 +160,38 @@ async function loadCategories() {
 
 // Función para renderizar categorías
 function renderCategories() {
-    const container = document.getElementById('categoriesContainer');
-    const loadingElement = document.getElementById('loadingCategories');
-    
-    if (categories.length === 0) {
-        loadingElement.style.display = 'none';
-        container.innerHTML = '<p class="no-categories">No hay categorías disponibles</p>';
+    const categoriesContainer = document.getElementById('categoriesContainer');
+    if (!categoriesContainer) {
+        console.error('Container de categorías no encontrado');
         return;
     }
     
-    loadingElement.style.display = 'none';
+    if (!categories || categories.length === 0) {
+        categoriesContainer.innerHTML = '<p class="no-data">No hay categorías disponibles</p>';
+        return;
+    }
     
-    const categoriesHTML = categories.map(category => {
-        const randomColor = Utils.getRandomPastelColor();
-        // Decodificar caracteres Unicode y escapar comillas para evitar errores en onclick
-        const categoryName = category.name.replace(/'/g, "\\'");
-        return `
-            <div class="category-card" style="background: ${randomColor}" onclick="openRestaurantsModal(${category.id}, '${categoryName}')">
-                ${category.image ? `<img src="${category.image}" alt="${category.name}" class="category-image">` : ''}
-                <p class="category-name">${category.name}</p>
-            </div>
-        `;
-    }).join('');
+    const categoriesHTML = categories.map(category => `
+        <div class="category-card" onclick="loadRestaurantsByCategory(${category.id})">
+            <h3>${category.name}</h3>
+            <p>${category.description || 'Sin descripción'}</p>
+        </div>
+    `).join('');
     
-    container.innerHTML = categoriesHTML;
+    categoriesContainer.innerHTML = categoriesHTML;
 }
 
-// Función para mostrar error en categorías
+// Función para mostrar errores de categorías
 function showCategoriesError(message) {
-    const container = document.getElementById('categoriesContainer');
-    container.innerHTML = `
-        <div class="loading-categories">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="15" y1="9" x2="9" y2="15"></line>
-                <line x1="9" y1="9" x2="15" y2="15"></line>
-            </svg>
-            <p>${message}</p>
-        </div>
-    `;
+    const categoriesContainer = document.getElementById('categoriesContainer');
+    if (categoriesContainer) {
+        categoriesContainer.innerHTML = `
+            <div class="error-message">
+                <p>Error al cargar categorías: ${message}</p>
+                <button onclick="loadCategories()" class="retry-btn">Reintentar</button>
+            </div>
+        `;
+    }
 }
 
 // Función para cargar productos
@@ -778,61 +766,43 @@ document.getElementById('productsModal').addEventListener('transitionend', funct
     }
 });
 
-// Inicialización cuando se carga el DOM
+// Event listener principal
 document.addEventListener('DOMContentLoaded', async function() {
-    // Esperar a que se cargue la configuración
-    await window.envLoaded;
-    
-    // Cargar categorías
-    await loadCategories();
-    
-    // Configurar inputs de archivo
-    const variationsInput = document.getElementById('variationsFile');
-    const productsInput = document.getElementById('productsFile');
-    const complementsInput = document.getElementById('complementsFile');
-    
-    if (variationsInput) {
-        variationsInput.addEventListener('change', function() {
-            const fileName = this.files[0]?.name || 'Ningún archivo seleccionado';
-            document.getElementById('variationsFileName').textContent = fileName;
-        });
-    }
-    
-    if (productsInput) {
-        productsInput.addEventListener('change', function() {
-            const fileName = this.files[0]?.name || 'Ningún archivo seleccionado';
-            document.getElementById('productsFileName').textContent = fileName;
-        });
-    }
-    
-    if (complementsInput) {
-        complementsInput.addEventListener('change', function() {
-            const fileName = this.files[0]?.name || 'Ningún archivo seleccionado';
-            document.getElementById('complementsFileName').textContent = fileName;
-        });
+    try {
+        console.log('=== INICIALIZANDO DASHBOARD ===');
+        
+        // Esperar a que se carguen las variables de entorno
+        await window.envLoaded;
+        console.log('Variables de entorno disponibles');
+        
+        // Cargar categorías automáticamente
+        await loadCategories();
+        console.log('Dashboard inicializado correctamente');
+        
+    } catch (error) {
+        console.error('Error inicializando dashboard:', error);
+        alert(`Error al inicializar dashboard: ${error.message}`);
     }
 });
 
-// Función para obtener configuración (cache)
+// Función para obtener configuración con cache
 async function getConfigCache() {
     if (!CONFIG_CACHE) {
         try {
-            console.log('Obteniendo configuración...');
+            console.log('Cargando configuración...');
+            
+            // Esperar a que se carguen las variables de entorno
+            await window.envLoaded;
+            console.log('Variables de entorno cargadas');
             
             // Verificar que window.getConfig existe
             if (typeof window.getConfig !== 'function') {
                 throw new Error('window.getConfig no está disponible');
             }
             
-            // Asegurar que las variables de entorno estén cargadas
-            if (window.envLoaded) {
-                await window.envLoaded;
-            }
-            
             CONFIG_CACHE = await window.getConfig();
             console.log('Configuración obtenida:', CONFIG_CACHE);
             
-            // Verificar que la configuración tiene los campos necesarios
             if (!CONFIG_CACHE.API_BASE_URL) {
                 throw new Error('API_BASE_URL no está configurada en las variables de entorno');
             }
@@ -911,8 +881,9 @@ async function loadCategories() {
     }
 }
 
-// Asegurar que la función está disponible globalmente
+// Asegurar que las funciones estén disponibles globalmente
 window.loadCategories = loadCategories;
+window.loadRestaurantsByCategory = loadRestaurantsByCategory;
 
 // Función para abrir modal de restaurantes
 async function openRestaurantsModal(categoryId, categoryName) {
@@ -1334,17 +1305,22 @@ async function getConfigCache() {
 async function loadRestaurantsByCategory(categoryId) {
     try {
         const config = await getConfigCache();
-        const response = await fetch(`${config.API_BASE_URL}/restaurants/category/${categoryId}`);
-        const result = await response.json();
+        const url = `${config.API_BASE_URL}/restaurants/category/${categoryId}`;
         
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
         if (result.success) {
-            currentRestaurants = result.data;
-            renderRestaurants(currentRestaurants);
+            // Manejar la respuesta de restaurantes
+            console.log('Restaurantes cargados:', result.data);
         } else {
-            showRestaurantsError(result.message || 'Error al cargar restaurantes');
+            throw new Error(result.message || 'Error al cargar restaurantes');
         }
     } catch (error) {
-        console.error('Error al cargar restaurantes:', error);
-        showRestaurantsError('Error de conexión al cargar restaurantes');
+        console.error('Error cargando restaurantes:', error);
+        alert(`Error al cargar restaurantes: ${error.message}`);
     }
 }
