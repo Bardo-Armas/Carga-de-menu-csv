@@ -1,5 +1,4 @@
 // Configuración de la API
-//const API_BASE_URL = 'https://da-pw.tupide.mx/api/menu-mc';
 const API_BASE_URL = 'http://127.0.0.1:8002/api/menu-mc';
 // Variables globales para categorías
 let categories = [];
@@ -56,7 +55,8 @@ async function openRestaurantsModal(categoryId, categoryName) {
         `;
         
         // Cargar restaurantes
-        const response = await fetch(`${CONFIG.API_BASE_URL}/restaurants/category/${categoryId}`);
+        const config = await getConfigCache();
+        const response = await fetch(`${config.API_BASE_URL}/restaurants/category/${categoryId}`);
         const result = await response.json();
         
         if (result.success && result.data) {
@@ -149,29 +149,18 @@ function selectRestaurant(restaurantId, restaurantName) {
 // Función para cargar categorías
 async function loadCategories() {
     try {
-        const response = await fetch(`${API_BASE_URL}/categories/active`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-        
+        const config = await getConfigCache();
+        const response = await fetch(`${config.API_BASE_URL}/categories/active`);
         const result = await response.json();
         
-        if (response.ok && result.success) {
-            // Mapear los datos del API al formato esperado por el código
-            categories = result.data.map(category => ({
-                id: category.dc_id,
-                name: category.dc_name,
-                image: category.dc_path
-            }));
+        if (result.success) {
+            categories = result.data;
             renderCategories();
         } else {
-            showCategoriesError(result.message || 'Error al cargar las categorías');
+            showCategoriesError(result.message || 'Error al cargar categorías');
         }
     } catch (error) {
-        console.error('Error loading categories:', error);
+        console.error('Error al cargar categorías:', error);
         showCategoriesError('Error de conexión al cargar categorías');
     }
 }
@@ -492,37 +481,41 @@ function slideCategories(direction) {
 // Función para subir archivo
 async function uploadFile(file, endpoint, progressId, progressBarId, resultId, btnId) {
     const formData = new FormData();
-    formData.append('csv_file', file);
+    formData.append('file', file);
     
-    const btn = document.getElementById(btnId);
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> Procesando...';
+    const progressElement = document.getElementById(progressId);
+    const progressBar = document.getElementById(progressBarId);
+    const resultElement = document.getElementById(resultId);
+    const btnElement = document.getElementById(btnId);
     
-    const progressInterval = Utils.showProgress(progressId, progressBarId);
+    progressElement.style.display = 'block';
+    resultElement.style.display = 'none';
+    btnElement.disabled = true;
     
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        const config = await getConfigCache();
+        const response = await fetch(`${config.API_BASE_URL}${endpoint}`, {
             method: 'POST',
             body: formData
-            // REMOVED: headers - let browser handle Content-Type automatically
         });
         
         const result = await response.json();
         
-        Utils.hideProgress(progressId, progressBarId, progressInterval);
+        progressElement.style.display = 'none';
+        resultElement.style.display = 'block';
         
-        if (response.ok && result.status) {
-            Utils.showResult(resultId, result.message || 'Archivo procesado exitosamente', true);
+        if (result.success) {
+            resultElement.innerHTML = `<div class="success">✓ ${result.message}</div>`;
         } else {
-            Utils.showResult(resultId, result.message || 'Error al procesar el archivo', false);
+            resultElement.innerHTML = `<div class="error">✗ ${result.message}</div>`;
         }
     } catch (error) {
-        Utils.hideProgress(progressId, progressBarId, progressInterval);
-        Utils.showResult(resultId, 'Error de conexión: ' + error.message, false);
+        console.error('Error:', error);
+        progressElement.style.display = 'none';
+        resultElement.style.display = 'block';
+        resultElement.innerHTML = `<div class="error">✗ Error de conexión</div>`;
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
+        btnElement.disabled = false;
     }
 }
 
@@ -787,18 +780,17 @@ document.getElementById('productsModal').addEventListener('transitionend', funct
     }
 });
 
-// Inicialización cuando se carga la página
-document.addEventListener('DOMContentLoaded', function() {
-    loadCategories();
+// Inicialización cuando se carga el DOM
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadCategories();
+    
+    // Configurar inputs de archivo
     Utils.setupFileInput('productsFile');
     Utils.setupFileInput('variationsFile');
     Utils.setupFileInput('complementsFile');
 });
 
-// Variables globales
-
-
-// Función para obtener configuración
+// Función para obtener configuración (cache)
 async function getConfigCache() {
     if (!CONFIG_CACHE) {
         CONFIG_CACHE = await window.getConfig();
@@ -811,21 +803,16 @@ async function loadRestaurantsByCategory(categoryId) {
     try {
         const config = await getConfigCache();
         const response = await fetch(`${config.API_BASE_URL}/restaurants/category/${categoryId}`);
+        const result = await response.json();
         
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            restaurants = data.data || [];
-            renderRestaurants();
+        if (result.success) {
+            currentRestaurants = result.data;
+            renderRestaurants(currentRestaurants);
         } else {
-            throw new Error(data.message || 'Error al cargar restaurantes');
+            showRestaurantsError(result.message || 'Error al cargar restaurantes');
         }
     } catch (error) {
-        console.error('Error cargando restaurantes:', error);
-        showNotification('Error al cargar restaurantes: ' + error.message, 'error');
+        console.error('Error al cargar restaurantes:', error);
+        showRestaurantsError('Error de conexión al cargar restaurantes');
     }
 }
