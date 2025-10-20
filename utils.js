@@ -11,7 +11,28 @@ async function getRandomPastelColor() {
     return UTILS_CONFIG_CACHE.PASTEL_COLORS[Math.floor(Math.random() * UTILS_CONFIG_CACHE.PASTEL_COLORS.length)];
 }
 
-function showProgress(message = 'Cargando...') {
+function showProgress(containerId = null, barId = null, message = 'Cargando...') {
+    // Si se proporcionan IDs específicos, usar esos elementos
+    if (containerId && barId) {
+        const container = document.getElementById(containerId);
+        const bar = document.getElementById(barId);
+        
+        if (container && bar) {
+            container.style.display = 'block';
+            bar.style.width = '0%';
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress > 90) progress = 90;
+                bar.style.width = progress + '%';
+            }, 100);
+            
+            return interval;
+        }
+    }
+    
+    // Si no se proporcionan IDs o no se encuentran los elementos, usar el método original
     const progressDiv = document.createElement('div');
     progressDiv.id = 'progressIndicator';
     progressDiv.innerHTML = `
@@ -36,21 +57,30 @@ function showProgress(message = 'Cargando...') {
         document.getElementById('progressBar').style.width = progress + '%';
     }, UTILS_CONFIG_CACHE?.UI_CONFIG?.PROGRESS_INTERVAL || 100);
     
-    return {
-        complete: () => {
-            clearInterval(interval);
-            document.getElementById('progressBar').style.width = '100%';
-            setTimeout(() => {
-                const progressElement = document.getElementById('progressIndicator');
-                if (progressElement) {
-                    progressElement.remove();
-                }
-            }, 500);
-        }
-    };
+    return interval;
 }
 
-function hideProgress() {
+function hideProgress(containerId = null, barId = null, interval = null) {
+    // Limpiar el intervalo si se proporciona
+    if (interval) {
+        clearInterval(interval);
+    }
+    
+    // Si se proporcionan IDs específicos, usar esos elementos
+    if (containerId && barId) {
+        const container = document.getElementById(containerId);
+        const bar = document.getElementById(barId);
+        
+        if (container && bar) {
+            bar.style.width = '100%';
+            setTimeout(() => {
+                container.style.display = 'none';
+            }, 500);
+            return;
+        }
+    }
+    
+    // Si no se proporcionan IDs o no se encuentran los elementos, usar el método original
     const progressElement = document.getElementById('progressIndicator');
     if (progressElement) {
         progressElement.remove();
@@ -89,16 +119,32 @@ async function validateFile(file) {
         UTILS_CONFIG_CACHE = await window.getConfig();
     }
     
-    if (file.size > UTILS_CONFIG_CACHE.FILE_CONFIG.MAX_FILE_SIZE) {
-        throw new Error(`El archivo es demasiado grande. Tamaño máximo: ${UTILS_CONFIG_CACHE.FILE_CONFIG.MAX_FILE_SIZE / (1024 * 1024)}MB`);
+    try {
+        if (file.size > UTILS_CONFIG_CACHE.FILE_CONFIG.MAX_FILE_SIZE) {
+            return {
+                valid: false,
+                message: `El archivo es demasiado grande. Tamaño máximo: ${UTILS_CONFIG_CACHE.FILE_CONFIG.MAX_FILE_SIZE / (1024 * 1024)}MB`
+            };
+        }
+        
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        if (!UTILS_CONFIG_CACHE.FILE_CONFIG.ACCEPTED_TYPES.includes(fileExtension)) {
+            return {
+                valid: false,
+                message: `Tipo de archivo no válido. Tipos aceptados: ${UTILS_CONFIG_CACHE.FILE_CONFIG.ACCEPTED_TYPES.join(', ')}`
+            };
+        }
+        
+        return {
+            valid: true,
+            message: 'Archivo válido'
+        };
+    } catch (error) {
+        return {
+            valid: false,
+            message: error.message || 'Error al validar el archivo'
+        };
     }
-    
-    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-    if (!UTILS_CONFIG_CACHE.FILE_CONFIG.ACCEPTED_TYPES.includes(fileExtension)) {
-        throw new Error(`Tipo de archivo no válido. Tipos aceptados: ${UTILS_CONFIG_CACHE.FILE_CONFIG.ACCEPTED_TYPES.join(', ')}`);
-    }
-    
-    return true;
 }
 
 function formatFileSize(bytes) {
