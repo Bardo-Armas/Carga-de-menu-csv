@@ -1,11 +1,11 @@
 // Utilidades generales
-let CONFIG_CACHE = null;
+let UTILS_CONFIG_CACHE = null;
 
 async function getRandomPastelColor() {
-    if (!CONFIG_CACHE) {
-        CONFIG_CACHE = await window.getConfig();
+    if (!UTILS_CONFIG_CACHE) {
+        UTILS_CONFIG_CACHE = await window.getConfig();
     }
-    return CONFIG_CACHE.PASTEL_COLORS[Math.floor(Math.random() * CONFIG_CACHE.PASTEL_COLORS.length)];
+    return UTILS_CONFIG_CACHE.PASTEL_COLORS[Math.floor(Math.random() * UTILS_CONFIG_CACHE.PASTEL_COLORS.length)];
 }
 
 function showProgress(message = 'Cargando...') {
@@ -25,13 +25,13 @@ function showProgress(message = 'Cargando...') {
     
     let progress = 0;
     const interval = setInterval(async () => {
-        if (!CONFIG_CACHE) {
-            CONFIG_CACHE = await window.getConfig();
+        if (!UTILS_CONFIG_CACHE) {
+            UTILS_CONFIG_CACHE = await window.getConfig();
         }
         progress += Math.random() * 10;
         if (progress > 90) progress = 90;
         document.getElementById('progressBar').style.width = progress + '%';
-    }, CONFIG_CACHE?.UI_CONFIG?.PROGRESS_INTERVAL || 100);
+    }, UTILS_CONFIG_CACHE?.UI_CONFIG?.PROGRESS_INTERVAL || 100);
     
     return {
         complete: () => {
@@ -82,17 +82,17 @@ function showNotification(message, type = 'info') {
 }
 
 async function validateFile(file) {
-    if (!CONFIG_CACHE) {
-        CONFIG_CACHE = await window.getConfig();
+    if (!UTILS_CONFIG_CACHE) {
+        UTILS_CONFIG_CACHE = await window.getConfig();
     }
     
-    if (file.size > CONFIG_CACHE.FILE_CONFIG.MAX_FILE_SIZE) {
-        throw new Error(`El archivo es demasiado grande. Tamaño máximo: ${CONFIG_CACHE.FILE_CONFIG.MAX_FILE_SIZE / (1024 * 1024)}MB`);
+    if (file.size > UTILS_CONFIG_CACHE.FILE_CONFIG.MAX_FILE_SIZE) {
+        throw new Error(`El archivo es demasiado grande. Tamaño máximo: ${UTILS_CONFIG_CACHE.FILE_CONFIG.MAX_FILE_SIZE / (1024 * 1024)}MB`);
     }
     
     const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-    if (!CONFIG_CACHE.FILE_CONFIG.ACCEPTED_TYPES.includes(fileExtension)) {
-        throw new Error(`Tipo de archivo no válido. Tipos aceptados: ${CONFIG_CACHE.FILE_CONFIG.ACCEPTED_TYPES.join(', ')}`);
+    if (!UTILS_CONFIG_CACHE.FILE_CONFIG.ACCEPTED_TYPES.includes(fileExtension)) {
+        throw new Error(`Tipo de archivo no válido. Tipos aceptados: ${UTILS_CONFIG_CACHE.FILE_CONFIG.ACCEPTED_TYPES.join(', ')}`);
     }
     
     return true;
