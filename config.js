@@ -6,19 +6,29 @@ class ConfigManager {
 
     loadEnvVars() {
         return {
-            API_BASE_URL: this.getEnvVar('API_BASE_URL', 'menu'),
-            LOGIN_API_URL: this.getEnvVar('LOGIN_API_URL', 'admins'),
+            API_BASE_URL: this.getEnvVar('API_BASE_URL'),
+            LOGIN_API_URL: this.getEnvVar('LOGIN_API_URL'),
             AUTH_USER_KEY: this.getEnvVar('AUTH_USER_KEY', 'auth_user'),
             AUTH_SESSION_KEY: this.getEnvVar('AUTH_SESSION_KEY', 'auth_session'),
-            ALLOWED_ROLES: this.getEnvVar('ALLOWED_ROLES', 'roles')
+            ALLOWED_ROLES: this.getEnvVar('ALLOWED_ROLES', 'Call-center,Administrador,Dirección')
         };
     }
 
-    getEnvVar(key, defaultValue) {
+    getEnvVar(key, defaultValue = null) {
         if (typeof window !== 'undefined' && window.ENV && window.ENV[key]) {
             return window.ENV[key];
         }
+        
+        if (defaultValue === null) {
+            console.error(`Variable de entorno requerida no encontrada: ${key}`);
+            return null;
+        }
+        
         return defaultValue;
+    }
+    
+    isConfigured() {
+        return this.envVars.API_BASE_URL && this.envVars.LOGIN_API_URL;
     }
 }
 

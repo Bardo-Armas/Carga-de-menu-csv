@@ -9,8 +9,17 @@ class EnvLoader {
                 const response = await fetch('/api/env');
                 if (response.ok) {
                     const envVars = await response.json();
+                    
+                    // Verificar que las variables críticas estén presentes
+                    if (!envVars.API_BASE_URL || !envVars.LOGIN_API_URL) {
+                        throw new Error('Variables de entorno críticas no configuradas en Vercel');
+                    }
+                    
                     window.ENV = envVars;
                     return envVars;
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Error cargando configuración');
                 }
             } else {
                 // En desarrollo, intentar cargar el archivo .env
@@ -20,21 +29,28 @@ class EnvLoader {
                     const envVars = this.parseEnv(envText);
                     window.ENV = envVars;
                     return envVars;
+                } else {
+                    throw new Error('Archivo .env no encontrado en desarrollo');
                 }
             }
-            
-            console.warn('No se pudo cargar el archivo .env, usando valores por defecto');
-            // Valores por defecto
-            window.ENV = {
-                API_BASE_URL: 'https://da-pw.tupide.mx/api/menu-mc',
-                LOGIN_API_URL: 'https://control.da-pw.mx/api/panel-administrativo/admins/subitoInterno',
-                AUTH_USER_KEY: 'auth_user',
-                AUTH_SESSION_KEY: 'auth_session',
-                ALLOWED_ROLES: 'Call-center,Administrador,Dirección'
-            };
-            return window.ENV;
         } catch (error) {
-            console.warn('Error cargando variables de entorno:', error);
+            console.error('Error cargando variables de entorno:', error);
+            
+            // Mostrar error al usuario
+            if (document.body) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = `
+                    position: fixed; top: 0; left: 0; right: 0; 
+                    background: #f44336; color: white; padding: 15px; 
+                    text-align: center; z-index: 9999;
+                `;
+                errorDiv.innerHTML = `
+                    <strong>Error de Configuración:</strong> ${error.message}<br>
+                    <small>Contacte al administrador del sistema</small>
+                `;
+                document.body.prepend(errorDiv);
+            }
+            
             return {};
         }
     }
