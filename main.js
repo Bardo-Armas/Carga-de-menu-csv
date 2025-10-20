@@ -817,13 +817,29 @@ document.addEventListener('DOMContentLoaded', async function() {
 async function getConfigCache() {
     if (!CONFIG_CACHE) {
         try {
+            console.log('Obteniendo configuración...');
+            
+            // Verificar que window.getConfig existe
+            if (typeof window.getConfig !== 'function') {
+                throw new Error('window.getConfig no está disponible');
+            }
+            
             // Asegurar que las variables de entorno estén cargadas
-            await window.envLoaded;
+            if (window.envLoaded) {
+                await window.envLoaded;
+            }
+            
             CONFIG_CACHE = await window.getConfig();
-            console.log('Configuración cargada:', CONFIG_CACHE);
+            console.log('Configuración obtenida:', CONFIG_CACHE);
+            
+            // Verificar que la configuración tiene los campos necesarios
+            if (!CONFIG_CACHE.API_BASE_URL) {
+                throw new Error('API_BASE_URL no está configurada en las variables de entorno');
+            }
+            
         } catch (error) {
             console.error('Error cargando configuración:', error);
-            throw error;
+            throw new Error(`Error de configuración: ${error.message}`);
         }
     }
     return CONFIG_CACHE;
@@ -832,35 +848,71 @@ async function getConfigCache() {
 // Función para cargar categorías
 async function loadCategories() {
     try {
-        console.log('Iniciando loadCategories...');
+        console.log('=== INICIANDO CARGA DE CATEGORÍAS ===');
+        
         const config = await getConfigCache();
-        console.log('Config obtenida:', config);
+        console.log('Configuración para categorías:', config);
         
         if (!config.API_BASE_URL) {
             throw new Error('API_BASE_URL no configurada');
         }
         
         const url = `${config.API_BASE_URL}/categories/active`;
-        console.log('Haciendo petición a:', url);
+        console.log('URL de categorías:', url);
         
+        console.log('Haciendo petición fetch...');
         const response = await fetch(url);
-        console.log('Respuesta recibida:', response.status);
+        console.log('Respuesta recibida:', {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok,
+            url: response.url
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
+        }
         
         const result = await response.json();
-        console.log('Resultado:', result);
+        console.log('Resultado parseado:', result);
         
         if (result.success) {
-            categories = result.data;
-            renderCategories();
-            console.log('Categorías cargadas exitosamente:', categories.length);
+            categories = result.data || [];
+            console.log('Categorías asignadas:', categories.length, 'elementos');
+            
+            // Verificar que renderCategories existe
+            if (typeof renderCategories === 'function') {
+                renderCategories();
+                console.log('renderCategories ejecutado');
+            } else {
+                console.error('Función renderCategories no existe');
+            }
+            
+            console.log('=== CATEGORÍAS CARGADAS EXITOSAMENTE ===');
         } else {
-            showCategoriesError(result.message || 'Error al cargar categorías');
+            const errorMsg = result.message || 'Error desconocido del servidor';
+            console.error('Error del servidor:', errorMsg);
+            showCategoriesError(errorMsg);
         }
     } catch (error) {
-        console.error('Error al cargar categorías:', error);
-        showCategoriesError('Error de conexión al cargar categorías: ' + error.message);
+        console.error('=== ERROR EN CARGA DE CATEGORÍAS ===');
+        console.error('Error completo:', error);
+        console.error('Stack trace:', error.stack);
+        
+        const errorMessage = `Error de conexión: ${error.message}`;
+        console.error('Mensaje de error:', errorMessage);
+        
+        if (typeof showCategoriesError === 'function') {
+            showCategoriesError(errorMessage);
+        } else {
+            console.error('Función showCategoriesError no existe');
+            alert(errorMessage);
+        }
     }
 }
+
+// Asegurar que la función está disponible globalmente
+window.loadCategories = loadCategories;
 
 // Función para abrir modal de restaurantes
 async function openRestaurantsModal(categoryId, categoryName) {
