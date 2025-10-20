@@ -170,6 +170,7 @@ function renderCategories() {
         return;
     }
     
+    
     if (!categories || categories.length === 0) {
         categoriesContainer.innerHTML = '<p class="no-data">No hay categorías disponibles</p>';
         return;
