@@ -278,3 +278,55 @@ Utils.downloadCSV = function(csvContent, fileName) {
     // Liberar la URL del objeto
     URL.revokeObjectURL(url);
 };
+
+// Función para subir archivo
+Utils.uploadFile = async function(file, endpoint, progressId, progressBarId, resultId, btnId) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const btn = document.getElementById(btnId);
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> Procesando...';
+    
+    const progressInterval = Utils.showProgress(progressId, progressBarId);
+    
+    try {
+        if (!UTILS_CONFIG_CACHE) {
+            UTILS_CONFIG_CACHE = await window.getConfig();
+        }
+        
+        const response = await fetch(`${UTILS_CONFIG_CACHE.API_BASE_URL}${endpoint}`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            const text = await response.text();
+            throw new Error(`Respuesta no JSON (${response.status}). Body: ${text.slice(0,200)}`);
+        }
+        
+        const result = await response.json();
+        
+        Utils.hideProgress(progressId, progressBarId, progressInterval);
+        
+        if (response.ok && result.status) {
+            Utils.showResult(resultId, result.message || 'Archivo procesado exitosamente', true);
+            return true;
+        } else {
+            Utils.showResult(resultId, result.message || 'Error al procesar el archivo', false);
+            return false;
+        }
+    } catch (error) {
+        Utils.hideProgress(progressId, progressBarId, progressInterval);
+        Utils.showResult(resultId, 'Error de conexión: ' + error.message, false);
+        return false;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+};

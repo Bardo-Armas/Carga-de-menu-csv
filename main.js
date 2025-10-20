@@ -683,153 +683,16 @@ document.getElementById('variationsForm').addEventListener('submit', async (e) =
         return;
     }
     
-    const btn = document.getElementById('uploadVariationsBtn');
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> Procesando...';
-    
-    const progressInterval = Utils.showProgress('variationsProgress', 'variationsProgressBar');
-    
-    try {
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        const config = await getConfigCache();
-        const response = await fetch(`${config.API_BASE_URL}/upload-variations-csv`, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const contentType = response.headers.get('content-type') || '';
-        if (!contentType.includes('application/json')) {
-            const text = await response.text();
-            throw new Error(`Respuesta no JSON (${response.status}). Body: ${text.slice(0,200)}`);
-        }
-        const result = await response.json();
-        
-        Utils.hideProgress('variationsProgress', 'variationsProgressBar', progressInterval);
-        
-        if (response.ok && result.status) {
-            Utils.showResult('variationsResult', result.message || 'Variaciones procesadas exitosamente', true);
-        } else {
-            Utils.showResult('variationsResult', result.message || 'Error al procesar las variaciones', false);
-        }
-    } catch (error) {
-        Utils.hideProgress('variationsProgress', 'variationsProgressBar', progressInterval);
-        Utils.showResult('variationsResult', 'Error de conexión: ' + error.message, false);
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-    }
+    await Utils.uploadFile(
+        file, 
+        '/upload-variations-csv', 
+        'variationsProgress', 
+        'variationsProgressBar', 
+        'variationsResult', 
+        'uploadVariationsBtn'
+    );
 });
 
-// Función para parsear CSV a array de objetos
-function parseCSV(csvText) {
-    const lines = csvText.split('\n').filter(line => line.trim() !== '');
-    if (lines.length < 2) {
-        throw new Error('El archivo CSV debe tener al menos una fila de encabezados y una fila de datos');
-    }
-    
-    const headers = lines[0].split(',').map(header => header.trim().replace(/"/g, ''));
-    const data = [];
-    
-    for (let i = 1; i < lines.length; i++) {
-        const values = [];
-        let current = '';
-        let inQuotes = false;
-        
-        for (let j = 0; j < lines[i].length; j++) {
-            const char = lines[i][j];
-            if (char === '"') {
-                inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
-                values.push(current.trim());
-                current = '';
-            } else {
-                current += char;
-            }
-        }
-        values.push(current.trim()); // Agregar el último valor
-        
-        if (values.length === headers.length) {
-            const row = {};
-            headers.forEach((header, index) => {
-                row[header] = values[index].replace(/"/g, '');
-            });
-            data.push(row);
-        }
-    }
-    
-    return data;
-}
-
-document.getElementById('productsForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const fileInput = document.getElementById('productsFile');
-    const file = fileInput.files[0];
-    
-    const validation = Utils.validateFile(file);
-    if (!validation.valid) {
-        Utils.showResult('productsResult', validation.message, false);
-        return;
-    }
-    
-    const btn = document.getElementById('uploadProductsBtn');
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> Procesando...';
-    
-    const progressInterval = Utils.showProgress('productsProgress', 'productsProgressBar');
-    
-    try {
-        // Leer y parsear el archivo CSV
-        const csvText = await file.text();
-        const parsedData = parseCSV(csvText);
-        
-        // Validar que el CSV tenga las columnas requeridas
-        const requiredColumns = ['Establecimiento', 'Categoria', 'Nombre del producto', 'Descripcion', 'Costo'];
-        const firstRow = parsedData[0];
-        const missingColumns = requiredColumns.filter(col => !(col in firstRow));
-        
-        if (missingColumns.length > 0) {
-            throw new Error(`Faltan las siguientes columnas en el CSV: ${missingColumns.join(', ')}`);
-        }
-        
-        // Enviar datos parseados como JSON
-        const config = await getConfigCache();
-        const response = await fetch(`${config.API_BASE_URL}/addProductsCsv`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({ data: parsedData })
-        });
-        
-        const contentType = response.headers.get('content-type') || '';
-        if (!contentType.includes('application/json')) {
-            const text = await response.text();
-            throw new Error(`Respuesta no JSON (${response.status}). Body: ${text.slice(0,200)}`);
-        }
-        const result = await response.json();
-        
-        Utils.hideProgress('productsProgress', 'productsProgressBar', progressInterval);
-        
-        if (response.ok && result.status) {
-            Utils.showResult('productsResult', result.message || 'Productos cargados exitosamente', true);
-            fileInput.value = ''; // Limpiar el input
-        } else {
-            Utils.showResult('productsResult', result.message || 'Error al cargar productos', false);
-        }
-    } catch (error) {
-        Utils.hideProgress('productsProgress', 'productsProgressBar', progressInterval);
-        Utils.showResult('productsResult', 'Error al procesar el archivo: ' + error.message, false);
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-    }
-});
 document.getElementById('complementsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const file = document.getElementById('complementsFile').files[0];
@@ -840,44 +703,14 @@ document.getElementById('complementsForm').addEventListener('submit', async (e) 
         return;
     }
     
-    const btn = document.getElementById('uploadComplementsBtn');
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> Procesando...';
-    
-    const progressInterval = Utils.showProgress('complementsProgress', 'complementsProgressBar');
-    
-    try {
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        const config = await getConfigCache();
-        const response = await fetch(`${config.API_BASE_URL}/upload-complements-csv`, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const contentType = response.headers.get('content-type') || '';
-        if (!contentType.includes('application/json')) {
-            const text = await response.text();
-            throw new Error(`Respuesta no JSON (${response.status}). Body: ${text.slice(0,200)}`);
-        }
-        const result = await response.json();
-        
-        Utils.hideProgress('complementsProgress', 'complementsProgressBar', progressInterval);
-        
-        if (response.ok && result.status) {
-            Utils.showResult('complementsResult', result.message || 'Complementos procesados exitosamente', true);
-        } else {
-            Utils.showResult('complementsResult', result.message || 'Error al procesar los complementos', false);
-        }
-    } catch (error) {
-        Utils.hideProgress('complementsProgress', 'complementsProgressBar', progressInterval);
-        Utils.showResult('complementsResult', 'Error de conexión: ' + error.message, false);
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-    }
+    await Utils.uploadFile(
+        file, 
+        '/upload-complements-csv', 
+        'complementsProgress', 
+        'complementsProgressBar', 
+        'complementsResult', 
+        'uploadComplementsBtn'
+    );
 });
 
 // Configurar input de productos cuando se abra el modal
