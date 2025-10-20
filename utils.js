@@ -171,6 +171,15 @@ Utils.fetchJSON = async function(url, options = {}) {
 // Crear el objeto Utils si no existe
 window.Utils = window.Utils || {};
 
+// Exportar todas las funciones necesarias al objeto global Utils
+Utils.validateFile = validateFile;
+Utils.showProgress = showProgress;
+Utils.hideProgress = hideProgress;
+Utils.showResult = showResult;
+Utils.formatFileSize = formatFileSize;
+Utils.debounce = debounce;
+Utils.setupFileInput = setupFileInput;
+
 // Añadir la función downloadCSV al objeto Utils
 Utils.downloadCSV = function(csvContent, fileName) {
     // Crear un elemento <a> invisible
