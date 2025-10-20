@@ -1,6 +1,9 @@
 // Utilidades generales
 let UTILS_CONFIG_CACHE = null;
 
+// Crear el objeto Utils si no existe
+window.Utils = window.Utils || {};
+
 async function getRandomPastelColor() {
     if (!UTILS_CONFIG_CACHE) {
         UTILS_CONFIG_CACHE = await window.getConfig();
@@ -136,7 +139,6 @@ if (!document.getElementById('utilsStyles')) {
 }
 
 // Añadir esta función a tu archivo utils.js existente
-
 Utils.fetchJSON = async function(url, options = {}) {
     try {
         const response = await fetch(url, options);
@@ -192,9 +194,6 @@ function setupFileInput(inputId) {
         }
     });
 }
-
-// Crear el objeto Utils si no existe
-window.Utils = window.Utils || {};
 
 // Exportar todas las funciones necesarias al objeto global Utils
 Utils.validateFile = validateFile;
