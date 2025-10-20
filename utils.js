@@ -168,6 +168,31 @@ Utils.fetchJSON = async function(url, options = {}) {
     }
 };
 
+// Función para mostrar resultado
+function showResult(resultId, message, isSuccess) {
+    const resultDiv = document.getElementById(resultId);
+    resultDiv.textContent = message;
+    resultDiv.className = `result ${isSuccess ? 'success' : 'error'}`;
+    resultDiv.style.display = 'block';
+}
+
+// Mejorar experiencia de selección de archivos
+function setupFileInput(inputId) {
+    const input = document.getElementById(inputId);
+    
+    input.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            this.classList.add('file-selected');
+            this.style.color = 'var(--success-green)';
+            this.setAttribute('data-text', `Archivo seleccionado: ${this.files[0].name}`);
+        } else {
+            this.classList.remove('file-selected');
+            this.style.color = '';
+            this.removeAttribute('data-text');
+        }
+    });
+}
+
 // Crear el objeto Utils si no existe
 window.Utils = window.Utils || {};
 
