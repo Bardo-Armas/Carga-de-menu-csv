@@ -135,5 +135,33 @@
     <script src="env-loader.js"></script>
     <script src="config.js"></script>
     <script src="auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Esperar a que se carguen las variables de entorno
+                await window.envLoaded;
+                
+                // Inicializar AuthManager
+                await window.AuthManager.initializeLogin();
+                
+                // Configurar el evento de submit del formulario
+                const loginForm = document.getElementById('loginForm');
+                if (loginForm) {
+                    loginForm.addEventListener('submit', window.AuthManager.handleLogin.bind(window.AuthManager));
+                    console.log('Formulario de login configurado correctamente');
+                } else {
+                    console.error('No se encontró el formulario de login');
+                }
+                
+            } catch (error) {
+                console.error('Error inicializando el sistema de login:', error);
+                const errorMessage = document.getElementById('errorMessage');
+                if (errorMessage) {
+                    errorMessage.textContent = 'Error al cargar el sistema de login. Por favor, recarga la página.';
+                    errorMessage.style.display = 'block';
+                }
+            }
+        });
+    </script>
 </body>
 </html>
