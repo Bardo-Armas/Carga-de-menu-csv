@@ -160,6 +160,7 @@ async function loadCategories() {
 
 // Asegurar que las funciones estén disponibles globalmente INMEDIATAMENTE
 window.loadCategories = loadCategories;
+console.log('main.js: loadCategories expuesta en window =', typeof window.loadCategories);
 
 // Función para renderizar categorías
 function renderCategories() {

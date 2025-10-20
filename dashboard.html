@@ -344,25 +344,14 @@
                     });
                 }
                 
-                // ESPERAR A QUE MAIN.JS ESTÉ COMPLETAMENTE CARGADO
-                let attempts = 0;
-                const maxAttempts = 50; // 5 segundos máximo
-                
-                while (typeof window.loadCategories !== 'function' && attempts < maxAttempts) {
-                    console.log(`Esperando loadCategories... intento ${attempts + 1}`);
-                    await new Promise(resolve => setTimeout(resolve, 100)); // Esperar 100ms
-                    attempts++;
+                // Inicializar categorías si está disponible; si no, main.js las cargará en su DOMContentLoaded.
+                if (typeof window.loadCategories === 'function') {
+                    console.log('Iniciando carga de categorías (dashboard)...');
+                    await window.loadCategories();
+                    console.log('Dashboard inicializado correctamente (dashboard)');
+                } else {
+                    console.warn('loadCategories no está disponible inmediatamente; main.js la invocará en DOMContentLoaded.');
                 }
-                
-                // Verificar que loadCategories existe después de esperar
-                if (typeof window.loadCategories !== 'function') {
-                    throw new Error('Función loadCategories no está disponible después de esperar');
-                }
-                
-                // Inicializar el dashboard
-                console.log('Iniciando carga de categorías (dashboard)...');
-                await window.loadCategories();
-                console.log('Dashboard inicializado correctamente (dashboard)');
                 
             } catch (error) {
                 console.error('Error detallado inicializando dashboard:', error);
