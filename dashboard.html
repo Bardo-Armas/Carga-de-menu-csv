@@ -314,24 +314,35 @@
     <script>
         // Proteger la página principal
         document.addEventListener('DOMContentLoaded', async function() {
-            // Esperar a que se cargue la configuración
-            await window.envLoaded;
-            
-            if (!AuthManager.requireAuth()) {
-                return;
+            try {
+                // Esperar a que se cargue la configuración
+                await window.envLoaded;
+                
+                // Verificar autenticación
+                if (!AuthManager.requireAuth()) {
+                    return;
+                }
+                
+                // Mostrar información del usuario
+                const user = AuthManager.getUser();
+                if (user) {
+                    document.getElementById('userWelcome').textContent = `Bienvenido, ${user.name}`;
+                    document.getElementById('userRole').textContent = `(${user.role})`;
+                }
+                
+                // Configurar logout
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    AuthManager.logout();
+                });
+                
+                // Inicializar el dashboard
+                console.log('Iniciando carga de categorías...');
+                await loadCategories();
+                
+            } catch (error) {
+                console.error('Error inicializando dashboard:', error);
+                alert('Error al cargar el dashboard. Por favor, recarga la página.');
             }
-            
-            // Mostrar información del usuario
-            const user = AuthManager.getUser();
-            if (user) {
-                document.getElementById('userWelcome').textContent = `Bienvenido, ${user.name}`;
-                document.getElementById('userRole').textContent = `(${user.role})`;
-            }
-            
-            // Configurar logout
-            document.getElementById('logoutBtn').addEventListener('click', () => {
-                AuthManager.logout();
-            });
         });
     </script>
 </body>
