@@ -323,67 +323,40 @@
                 }
                 
                 console.log('Esperando carga de configuración...');
+                
+                // Esperar a que window.envLoaded se resuelva
                 await window.envLoaded;
                 console.log('Configuración cargada');
                 
-                // Verificar que window.ENV existe
-                if (!window.ENV) {
-                    console.error('window.ENV no está disponible');
-                    throw new Error('Variables de entorno no cargadas');
-                }
-                
-                console.log('Variables de entorno:', window.ENV);
-                
-                // ESPERAR A QUE AUTHMANAGER ESTÉ DISPONIBLE
-                console.log('Verificando AuthManager...');
-                let attempts = 0;
-                const maxAttempts = 50; // 5 segundos máximo
-                
-                while ((!window.AuthManager || typeof window.AuthManager.requireAuth !== 'function') && attempts < maxAttempts) {
-                    console.log(`Esperando AuthManager... intento ${attempts + 1}`);
-                    await new Promise(resolve => setTimeout(resolve, 100)); // Esperar 100ms
-                    attempts++;
-                }
-                
-                if (!window.AuthManager || typeof window.AuthManager.requireAuth !== 'function') {
-                    throw new Error('AuthManager no está disponible después de esperar');
-                }
-                
-                console.log('AuthManager disponible:', window.AuthManager);
-                
                 // Verificar autenticación
-                console.log('Verificando autenticación...');
-                const isAuthenticated = await window.AuthManager.requireAuth();
-                if (!isAuthenticated) {
-                    console.log('Usuario no autenticado, redirigiendo...');
-                    return;
+                if (!window.AuthManager) {
+                    throw new Error('AuthManager no está disponible');
                 }
                 
+                await window.AuthManager.requireAuth();
                 console.log('Usuario autenticado');
-                
-                // Mostrar información del usuario
-                const user = window.AuthManager.getUser();
-                if (user) {
-                    const welcomeElement = document.getElementById('userWelcome');
-                    const roleElement = document.getElementById('userRole');
-                    
-                    if (welcomeElement) welcomeElement.textContent = `Bienvenido, ${user.name}`;
-                    if (roleElement) roleElement.textContent = `(${user.role})`;
-                    
-                    console.log('Información de usuario mostrada:', user);
-                }
                 
                 // Configurar logout
                 const logoutBtn = document.getElementById('logoutBtn');
                 if (logoutBtn) {
-                    logoutBtn.addEventListener('click', () => {
+                    logoutBtn.addEventListener('click', function() {
                         window.AuthManager.logout();
                     });
                 }
                 
-                // Verificar que loadCategories existe
+                // ESPERAR A QUE MAIN.JS ESTÉ COMPLETAMENTE CARGADO
+                let attempts = 0;
+                const maxAttempts = 50; // 5 segundos máximo
+                
+                while (typeof window.loadCategories !== 'function' && attempts < maxAttempts) {
+                    console.log(`Esperando loadCategories... intento ${attempts + 1}`);
+                    await new Promise(resolve => setTimeout(resolve, 100)); // Esperar 100ms
+                    attempts++;
+                }
+                
+                // Verificar que loadCategories existe después de esperar
                 if (typeof window.loadCategories !== 'function') {
-                    throw new Error('Función loadCategories no está disponible');
+                    throw new Error('Función loadCategories no está disponible después de esperar');
                 }
                 
                 // Inicializar el dashboard
@@ -399,20 +372,10 @@
                 const errorMessage = error.message || 'Error desconocido';
                 alert(`Error al cargar el dashboard: ${errorMessage}\n\nRevisa la consola del navegador (F12) para más detalles.`);
                 
-                // Mostrar error en la página también
-                const errorDiv = document.createElement('div');
-                errorDiv.style.cssText = `
-                    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                    background: #f44336; color: white; padding: 20px; border-radius: 8px;
-                    max-width: 500px; text-align: center; z-index: 10000;
-                `;
-                errorDiv.innerHTML = `
-                    <h3>Error de Inicialización</h3>
-                    <p><strong>Detalle:</strong> ${errorMessage}</p>
-                    <p><small>Abre la consola del navegador (F12) para más información</small></p>
-                    <button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: white; color: #f44336; border: none; border-radius: 4px; cursor: pointer;">Recargar Página</button>
-                `;
-                document.body.appendChild(errorDiv);
+                // Redirigir al login en caso de error de autenticación
+                if (error.message.includes('autenticación') || error.message.includes('AuthManager')) {
+                    window.location.href = 'index.html';
+                }
             }
         });
     </script>
