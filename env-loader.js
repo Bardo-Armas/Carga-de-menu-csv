@@ -30,6 +30,12 @@ class EnvLoader {
                     window.ENV = envVars;
                     return envVars;
                 } else {
+                    // Check content type to avoid parsing HTML as JSON
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('text/html')) {
+                        console.warn('Received HTML response instead of .env file');
+                        throw new Error('Archivo .env no encontrado en desarrollo');
+                    }
                     throw new Error('Archivo .env no encontrado en desarrollo');
                 }
             }
