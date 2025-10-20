@@ -348,9 +348,14 @@
                     if (userRole) {
                         userRole.textContent = userData.role;
                     }
-
+                }
+                
+                // Inicializar los inputs de archivo - MOVER AQUÍ FUERA DEL BLOQUE IF
+                if (typeof Utils !== 'undefined' && Utils.setupFileInput) {
                     Utils.setupFileInput('variationsFile');
                     Utils.setupFileInput('complementsFile');
+                } else {
+                    console.error('Utils no está disponible o setupFileInput no está definido');
                 }
                 
                 // Configurar logout
