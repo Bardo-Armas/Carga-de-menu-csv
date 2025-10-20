@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Menús CSV</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header con información del usuario y logout -->
+    <header class="app-header">
+        <div class="header-content">
+            <h1>Sistema de Gestión de Menús</h1>
+            <div class="user-info">
+                <span id="userWelcome">Bienvenido</span>
+                <span id="userRole" class="user-role"></span>
+                <button id="logoutBtn" class="logout-btn">Cerrar Sesión</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Resto del contenido existente -->
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="https://panel.subito.mx/images/logoApprisa.png" alt="Logo" onerror="this.style.display='none'">
+                </div>
+                <div class="header-title">
+                    <h1>Gestión de Menú</h1>
+                    <p>Administración de complementos y variaciones</p>
+                </div>
+                <div style="width: 120px;"></div> <!-- Spacer for centering -->
+            </div>
+        </header>
+
+        <main class="content">
+            <!-- Categories Section -->
+            <div class="categories-section">
+                <div class="categories-header">
+                    <h2 class="categories-title">Categorías Disponibles</h2>
+                    <div class="slider-controls">
+                        <button class="slider-btn" id="prevBtn" onclick="slideCategories('prev')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15,18 9,12 15,6"></polyline>
+                            </svg>
+                        </button>
+                        <button class="slider-btn" id="nextBtn" onclick="slideCategories('next')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9,18 15,12 9,6"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="categories-slider">
+                    <div class="categories-container" id="categoriesContainer">
+                        <div class="loading-categories" id="loadingCategories">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                            <p>Cargando categorías...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón para subir productos -->
+            <div style="text-align: center; margin: 2rem 0;">
+                <button class="btn btn-primary" onclick="openProductsModal()" style="padding: 1rem 2rem; font-size: 1.1rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17,8 12,3 7,8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Subir Productos del Menú
+                </button>
+            </div>
+
+            <!-- Products Section -->
+            <div class="products-section" id="productsSection" style="display: none;">
+                <div class="products-header">
+                    <h2 class="products-title" id="productsTitle">Productos del Restaurante</h2>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button class="btn btn-secondary" onclick="expandAllCategories()" style="font-size: 0.75rem; padding: 0.375rem 0.75rem;">
+                            Expandir Todo
+                        </button>
+                        <button class="btn btn-secondary" onclick="collapseAllCategories()" style="font-size: 0.75rem; padding: 0.375rem 0.75rem;">
+                            Colapsar Todo
+                        </button>
+                        <button class="btn btn-secondary" onclick="showCategories()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15,18 9,12 15,6"></polyline>
+                            </svg>
+                            Volver a Categorías
+                        </button>
+                    </div>
+                </div>
+                <div class="products-container" id="productsContainer">
+                    <div class="loading-products" id="loadingProducts">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 6v6l4 2"></path>
+                        </svg>
+                        <p>Cargando productos...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Productos -->
+            <div class="modal-overlay" id="productsModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Subir Productos del Menú</h2>
+                        <button class="modal-close" onclick="closeProductsModal()">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom: 1.5rem; color: var(--text-gray);">Sube y gestiona los productos del menú del restaurante mediante archivo CSV</p>
+                        <form id="productsForm">
+                            <div class="form-group">
+                                <label class="form-label" for="productsFile">
+                                    Archivo CSV de Productos
+                                </label>
+                                <div class="file-input-container">
+                                    <input 
+                                        type="file" 
+                                        id="productsFile" 
+                                        class="file-input" 
+                                        accept=".csv" 
+                                        required
+                                    >
+                                </div>
+                            </div>
+                            
+                            <div class="progress-container" id="productsProgress">
+                                <div class="progress">
+                                    <div class="progress-bar" id="productsProgressBar"></div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" id="uploadProductsBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17,8 12,3 7,8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                Cargar Productos
+                            </button>
+                            
+                            <div class="result" id="productsResult"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Restaurantes -->
+            <div class="modal-overlay" id="restaurantsModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title" id="modalTitle">Restaurantes</h2>
+                        <button class="modal-close" onclick="closeRestaurantsModal()">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="restaurants-grid" id="restaurantsGrid">
+                            <div class="loading-restaurants" id="loadingRestaurants">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M12 6v6l4 2"></path>
+                                </svg>
+                                <p>Cargando restaurantes...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="upload-grid">
+                <!-- Variaciones Card -->
+                <div class="upload-card">
+                    <div class="card-header">
+                        <h2>Variaciones de Productos</h2>
+                        <p>Gestiona las opciones y variantes de tus productos</p>
+                    </div>
+                    <div class="card-content">
+                        <form id="variationsForm">
+                            <div class="form-group">
+                                <label class="form-label" for="variationsFile">
+                                    Archivo CSV de Variaciones
+                                </label>
+                                <div class="file-input-container">
+                                    <input 
+                                        type="file" 
+                                        id="variationsFile" 
+                                        class="file-input" 
+                                        accept=".csv" 
+                                        required
+                                    >
+                                </div>
+                            </div>
+                            
+                            <div class="progress-container" id="variationsProgress">
+                                <div class="progress">
+                                    <div class="progress-bar" id="variationsProgressBar"></div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" id="uploadVariationsBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17,8 12,3 7,8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                Cargar Variaciones
+                            </button>
+                            
+                            <div class="result" id="variationsResult"></div>
+                            
+                            <div class="format-info">
+                                <h4>Formato del archivo CSV:</h4>
+                                <p><code>Establecimiento,Nombre Variacion,Descripcion,EsRequerido,NombreOpcion,Precio,EsDefault,id Productos</code></p>
+                                <p><strong>Ejemplo:</strong></p>
+                                <p><code>La Barra De Pizza,Tamaño,Seleccione el tamaño,TRUE,Chica,0,TRUE,6412</code></p>
+                                <button type="button" class="btn btn-secondary" onclick="downloadVariationsExample()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7,10 12,15 17,10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    Descargar Ejemplo CSV
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Complementos Card -->
+                <div class="upload-card">
+                    <div class="card-header">
+                        <h2>Complementos de Productos</h2>
+                        <p>Administra los complementos adicionales disponibles</p>
+                    </div>
+                    <div class="card-content">
+                        <form id="complementsForm">
+                            <div class="form-group">
+                                <label class="form-label" for="complementsFile">
+                                    Archivo CSV de Complementos
+                                </label>
+                                <div class="file-input-container">
+                                    <input 
+                                        type="file" 
+                                        id="complementsFile" 
+                                        class="file-input" 
+                                        accept=".csv" 
+                                        required
+                                    >
+                                </div>
+                            </div>
+                            
+                            <div class="progress-container" id="complementsProgress">
+                                <div class="progress">
+                                    <div class="progress-bar" id="complementsProgressBar"></div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" id="uploadComplementsBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17,8 12,3 7,8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                Cargar Complementos
+                            </button>
+                            
+                            <div class="result" id="complementsResult"></div>
+                            
+                            <div class="format-info">
+                                <h4>Formato del archivo CSV:</h4>
+                                <p><code>Establecimiento,Nombre complemento,Precio,id Productos</code></p>
+                                <p><strong>Ejemplo:</strong></p>
+                                <p><code>La Barra De Pizza,Salsa macha,10,"6410,6411,6413,6414,6415,6412"</code></p>
+                                <button type="button" class="btn btn-secondary" onclick="downloadComplementsExample()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7,10 12,15 17,10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    Descargar Ejemplo CSV
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="env-loader.js"></script>
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="utils.js"></script>
+    <script src="main.js"></script>
+    
+    <script>
+        // Proteger la página principal
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!AuthManager.requireAuth()) {
+                return;
+            }
+            
+            // Mostrar información del usuario
+            const user = AuthManager.getUser();
+            if (user) {
+                document.getElementById('userWelcome').textContent = `Bienvenido, ${user.name}`;
+                document.getElementById('userRole').textContent = `(${user.role})`;
+            }
+            
+            // Configurar logout
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                AuthManager.logout();
+            });
+        });
+    </script>
+</body>
+</html>

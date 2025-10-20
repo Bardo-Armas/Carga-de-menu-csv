@@ -1,0 +1,2317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Menú</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-yellow: #FFD700;
+            --dark-yellow: #E6C200;
+            --primary-black: #1A1A1A;
+            --light-black: #2D2D2D;
+            --pure-white: #FFFFFF;
+            --light-gray: #F8F9FA;
+            --border-gray: #E5E7EB;
+            --text-gray: #6B7280;
+            --success-green: #10B981;
+            --error-red: #EF4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--light-gray);
+            color: var(--primary-black);
+            line-height: 1.6;
+        }
+
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: var(--pure-white);
+            border-bottom: 1px solid var(--border-gray);
+            padding: 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-section img {
+            height: 48px;
+            width: auto;
+        }
+
+        .brand-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-black);
+        }
+
+        .header-title {
+            text-align: center;
+            flex: 1;
+        }
+
+        .header-title h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--primary-black);
+            margin-bottom: 0.25rem;
+        }
+
+        .header-title p {
+            font-size: 0.875rem;
+            color: var(--text-gray);
+            font-weight: 400;
+        }
+
+        /* Main Content */
+        .content {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .upload-card {
+            background: var(--pure-white);
+            border-radius: 12px;
+            border: 1px solid var(--border-gray);
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .upload-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            background: var(--primary-black);
+            color: var(--pure-white);
+            padding: 1.5rem;
+            border-bottom: 3px solid var(--primary-yellow);
+        }
+
+        .card-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-header p {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .card-content {
+            padding: 2rem;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--primary-black);
+            margin-bottom: 0.5rem;
+        }
+
+        .file-input-container {
+            position: relative;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px dashed var(--border-gray);
+            border-radius: 8px;
+            background: var(--light-gray);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            color: var(--text-gray);
+            text-align: center;
+        }
+
+        .file-input:hover {
+            border-color: var(--primary-yellow);
+            background: #FFFBEB;
+        }
+
+        .file-input:focus {
+            outline: none;
+            border-color: var(--primary-yellow);
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-yellow);
+            color: var(--primary-black);
+            border: 1px solid var(--dark-yellow);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--dark-yellow);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn:disabled {
+            background: var(--border-gray);
+            color: var(--text-gray);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .progress {
+            width: 100%;
+            height: 4px;
+            background: var(--border-gray);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary-yellow);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Results */
+        .result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        .result.success {
+            background: #F0FDF4;
+            color: var(--success-green);
+            border: 1px solid #BBF7D0;
+        }
+
+        .result.error {
+            background: #FEF2F2;
+            color: var(--error-red);
+            border: 1px solid #FECACA;
+        }
+
+        /* Format Info */
+        .format-info {
+            background: #FFFBEB;
+            border: 1px solid #FDE68A;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .format-info h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--primary-black);
+            margin-bottom: 0.5rem;
+        }
+
+        .format-info code {
+            background: var(--primary-black);
+            color: var(--primary-yellow);
+            padding: 0.125rem 0.375rem;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 0.75rem;
+        }
+
+        .format-info p {
+            font-size: 0.75rem;
+            color: var(--text-gray);
+            margin: 0.25rem 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+
+            .upload-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .card-content {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Loading state */
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* File input enhancement */
+        .file-selected {
+            border-color: var(--success-green);
+            background: #F0FDF4;
+            color: var(--success-green);
+        }
+
+        /* Categories Section */
+        .categories-section {
+            background: var(--pure-white);
+            border-radius: 12px;
+            border: 1px solid var(--border-gray);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .categories-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .categories-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary-black);
+        }
+
+        .categories-slider {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .categories-container {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding: 0.5rem 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .categories-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-card {
+            min-width: 150px;
+            background: var(--light-gray);
+            border: 2px solid var(--border-gray);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .category-card:hover {
+            border-color: var(--primary-yellow);
+            background: #FFFBEB;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+        }
+
+        .category-card.selected {
+            border-color: var(--primary-yellow);
+            background: var(--primary-yellow);
+            color: var(--primary-black);
+        }
+
+        .category-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 0.5rem;
+            border-radius: 8px;
+            background: var(--pure-white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .category-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .category-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .slider-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+
+        .slider-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border-gray);
+            background: var(--pure-white);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .slider-btn:hover {
+            border-color: var(--primary-yellow);
+            background: #FFFBEB;
+        }
+
+        .slider-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading-categories {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-gray);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--pure-white);
+            border-radius: 12px;
+            width: 95%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 6px;
+            color: var(--text-gray);
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--light-gray);
+            color: var(--text-dark);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+
+        .restaurants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .restaurant-card {
+            background: var(--pure-white);
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .restaurant-card:hover {
+            border-color: var(--primary-yellow);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .restaurant-card.selected {
+            border-color: var(--primary-yellow);
+            background: #FFFBEB;
+            box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2);
+        }
+
+        .restaurant-logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 0.75rem;
+            border-radius: 8px;
+            background: var(--light-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .restaurant-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .restaurant-logo.no-image {
+            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+            color: var(--text-gray);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .restaurant-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        .loading-restaurants {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-gray);
+            grid-column: 1 / -1;
+        }
+
+        .restaurants-error {
+            text-align: center;
+            padding: 3rem;
+            color: #dc3545;
+            grid-column: 1 / -1;
+        }
+
+        /* Products Section */
+        .products-section {
+            background: var(--pure-white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .products-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .products-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary-black);
+            margin: 0;
+        }
+
+        .btn-secondary {
+            background: var(--light-gray);
+            color: var(--primary-black);
+            border: 1px solid var(--border-gray);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--border-gray);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .products-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            padding: 1rem;
+            max-height: none;
+            overflow: visible;
+            padding-bottom: 2rem;
+        }
+
+        /* Scrollbar personalizado */
+        .products-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .products-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .products-container::-webkit-scrollbar-thumb {
+            background: var(--primary-yellow);
+            border-radius: 3px;
+        }
+
+        .products-container::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-yellow);
+        }
+
+        .product-category {
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            background: var(--pure-white);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .product-category-header {
+            background: #F8F9FA;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-gray);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.2s ease;
+            border-radius: 8px 8px 0 0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .product-category-header:hover {
+            background: #E9ECEF;
+        }
+
+        .product-category-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-black);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .category-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background: var(--pure-white);
+            border: 1px solid var(--border-gray);
+            transition: all 0.2s ease;
+        }
+
+        .category-toggle svg {
+            transition: transform 0.2s ease;
+        }
+
+        .product-category.collapsed .category-toggle svg {
+            transform: rotate(-90deg);
+        }
+
+        .product-list-container {
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .product-list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .product-list-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .product-list-container::-webkit-scrollbar-thumb {
+            background: var(--primary-yellow);
+            border-radius: 3px;
+        }
+
+        .product-list-container::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-yellow);
+        }
+
+        .product-category.collapsed .product-list-container {
+            display: none;
+        }
+
+        .product-list {
+            padding: 1rem;
+        }
+
+        .product-subcategory {
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--primary-yellow);
+            background: #FAFAFA;
+            border-radius: 6px;
+        }
+
+        .subcategory-header {
+            background: #F0F0F0;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 6px 6px 0 0;
+            transition: background-color 0.2s ease;
+        }
+
+        .subcategory-header:hover {
+            background: #E8E8E8;
+        }
+
+        .subcategory-title {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--primary-black);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .subcategory-count {
+            background: var(--primary-yellow);
+            color: var(--primary-black);
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .subcategory-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            background: var(--pure-white);
+            border: 1px solid var(--border-gray);
+            transition: all 0.2s ease;
+        }
+
+        .subcategory-toggle svg {
+            transition: transform 0.2s ease;
+        }
+
+        .product-subcategory.collapsed .subcategory-toggle svg {
+            transform: rotate(-90deg);
+        }
+
+        .product-subcategory.collapsed .subcategory-products {
+            display: none;
+        }
+
+        .subcategory-products {
+            padding: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .subcategory-products::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .subcategory-products::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .subcategory-products::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 2px;
+        }
+
+        .subcategory-products .product-item {
+            margin-bottom: 1rem;
+            border-left: 2px solid #E0E0E0;
+            padding-left: 1rem;
+            background: var(--pure-white);
+            border-radius: 4px;
+            padding: 1rem;
+        }
+
+        .product-list table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .product-list th,
+        .product-list td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #E9ECEF;
+        }
+
+        .product-list th {
+            background: #F8F9FA;
+            font-weight: 600;
+            color: var(--primary-black);
+        }
+
+        .product-list tr:hover {
+            background: #F8F9FA;
+        }
+
+        /* Scrollbar para lista de productos */
+        .product-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .product-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .product-list::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 2px;
+        }
+
+        .product-list::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+
+        .product-item {
+            padding: 1rem;
+            border-bottom: 1px solid #F1F3F4;
+            transition: background-color 0.2s ease;
+        }
+
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-item:hover {
+            background: #F8F9FA;
+        }
+
+        .product-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .product-info {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            flex: 1;
+        }
+
+        .product-id {
+            background: var(--primary-yellow);
+            color: var(--primary-black);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            min-width: 40px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .product-name {
+            font-size: 0.875rem;
+            color: var(--primary-black);
+            margin: 0 0 0.25rem 0;
+            line-height: 1.4;
+            font-weight: 600;
+        }
+
+        .product-description {
+            font-size: 0.75rem;
+            color: var(--text-gray);
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        .product-price {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--success-green);
+            flex-shrink: 0;
+        }
+
+        .product-variations {
+            margin-bottom: 1rem;
+        }
+
+        .product-variations h5 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--primary-black);
+            margin: 0 0 0.75rem 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .variation-item {
+            margin-bottom: 0.75rem;
+            padding: 0.75rem;
+            background: #F8F9FA;
+            border-radius: 8px;
+            border-left: 3px solid var(--primary-yellow);
+        }
+
+        .variation-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .variation-item strong {
+            font-size: 0.8rem;
+            color: var(--primary-black);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .variation-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .variation-option {
+            background: var(--pure-white);
+            border: 1px solid var(--border-gray);
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            color: var(--text-gray);
+            font-weight: 500;
+            min-width: fit-content;
+        }
+
+        .variation-option.default {
+            background: var(--primary-yellow);
+            color: var(--primary-black);
+            border-color: var(--dark-yellow);
+            font-weight: 600;
+        }
+
+        .product-complements {
+            margin-bottom: 0.75rem;
+        }
+
+        .product-complements h5 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--primary-black);
+            margin: 0 0 0.75rem 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .complements-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .complement-item {
+            background: #E5F3FF;
+            border: 1px solid #B3D9FF;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            color: #0066CC;
+            font-weight: 500;
+            min-width: fit-content;
+        }
+
+        .complement-item.required {
+            background: #FFE5E5;
+            border-color: #FFB3B3;
+            color: #CC0000;
+        }
+
+        .category-count {
+            background: var(--border-gray);
+            color: var(--text-gray);
+            padding: 0.125rem 0.375rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .loading-products {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-gray);
+        }
+
+        .loading-products svg {
+            animation: spin 1s linear infinite;
+            margin-bottom: 0.5rem;
+        }
+
+        .products-error {
+            text-align: center;
+            padding: 2rem;
+            color: var(--error-red);
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .product-card {
+            background: var(--pure-white);
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .product-card:hover {
+            border-color: var(--primary-yellow);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .product-card.selected {
+            border-color: var(--primary-yellow);
+            background: #FFFBEB;
+            box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 120px;
+            border-radius: 6px;
+            background: var(--light-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-image.no-image {
+            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+            color: var(--text-gray);
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .product-description {
+            font-size: 0.75rem;
+            color: var(--text-gray);
+            margin: 0 0 0.5rem 0;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Responsive modal */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 98%;
+                max-height: 92vh;
+            }
+            
+            .restaurants-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+            
+            .restaurant-logo {
+                width: 48px;
+                height: 48px;
+            }
+
+            .products-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .products-container {
+                max-height: 70vh;
+            }
+
+            .product-list {
+                min-height: 200px;
+                max-height: 350px;
+            }
+        }
+
+        /* Responsive para móviles */
+        @media (max-width: 768px) {
+            .categories-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .category-card {
+                min-width: 120px;
+            }
+
+            .product-list-container {
+                max-height: 300px;
+            }
+            
+            .subcategory-products {
+                max-height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="https://panel.subito.mx/images/logoApprisa.png" alt="Súbito" />
+                </div>
+                <div class="header-title">
+                    <h1>Gestión de Menú</h1>
+                    <p>Administración de complementos y variaciones</p>
+                </div>
+                <div style="width: 120px;"></div> <!-- Spacer for centering -->
+            </div>
+        </header>
+
+        <main class="content">
+            <!-- Categories Section -->
+            <div class="categories-section">
+                <div class="categories-header">
+                    <h2 class="categories-title">Categorías Disponibles</h2>
+                    <div class="slider-controls">
+                        <button class="slider-btn" id="prevBtn" onclick="slideCategories('prev')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15,18 9,12 15,6"></polyline>
+                            </svg>
+                        </button>
+                        <button class="slider-btn" id="nextBtn" onclick="slideCategories('next')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9,18 15,12 9,6"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="categories-slider">
+                    <div class="categories-container" id="categoriesContainer">
+                        <div class="loading-categories" id="loadingCategories">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                            <p>Cargando categorías...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón para subir productos -->
+            <div style="text-align: center; margin: 2rem 0;">
+                <button class="btn btn-primary" onclick="openProductsModal()" style="padding: 1rem 2rem; font-size: 1.1rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17,8 12,3 7,8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Subir Productos del Menú
+                </button>
+            </div>
+
+            <!-- Products Section -->
+            <div class="products-section" id="productsSection" style="display: none;">
+                <div class="products-header">
+                    <h2 class="products-title" id="productsTitle">Productos del Restaurante</h2>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button class="btn btn-secondary" onclick="expandAllCategories()" style="font-size: 0.75rem; padding: 0.375rem 0.75rem;">
+                            Expandir Todo
+                        </button>
+                        <button class="btn btn-secondary" onclick="collapseAllCategories()" style="font-size: 0.75rem; padding: 0.375rem 0.75rem;">
+                            Colapsar Todo
+                        </button>
+                        <button class="btn btn-secondary" onclick="showCategories()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15,18 9,12 15,6"></polyline>
+                            </svg>
+                            Volver a Categorías
+                        </button>
+                    </div>
+                </div>
+                <div class="products-container" id="productsContainer">
+                    <div class="loading-products" id="loadingProducts">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 6v6l4 2"></path>
+                        </svg>
+                        <p>Cargando productos...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Productos -->
+            <div class="modal-overlay" id="productsModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Subir Productos del Menú</h2>
+                        <button class="modal-close" onclick="closeProductsModal()">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom: 1.5rem; color: var(--text-gray);">Sube y gestiona los productos del menú del restaurante mediante archivo CSV</p>
+                        <form id="productsForm">
+                            <div class="form-group">
+                                <label class="form-label" for="productsFile">
+                                    Archivo CSV de Productos
+                                </label>
+                                <div class="file-input-container">
+                                    <input 
+                                        type="file" 
+                                        id="productsFile" 
+                                        class="file-input" 
+                                        accept=".csv" 
+                                        required
+                                    >
+                                </div>
+                            </div>
+                            
+                            <div class="progress-container" id="productsProgress">
+                                <div class="progress">
+                                    <div class="progress-bar" id="productsProgressBar"></div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" id="uploadProductsBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17,8 12,3 7,8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                Cargar Productos
+                            </button>
+                            
+                            <div class="result" id="productsResult"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Restaurantes -->
+            <div class="modal-overlay" id="restaurantsModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title" id="modalTitle">Restaurantes</h2>
+                        <button class="modal-close" onclick="closeRestaurantsModal()">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="restaurants-grid" id="restaurantsGrid">
+                            <div class="loading-restaurants" id="loadingRestaurants">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M12 6v6l4 2"></path>
+                                </svg>
+                                <p>Cargando restaurantes...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="upload-grid">
+                <!-- Variaciones Card -->
+                <div class="upload-card">
+                    <div class="card-header">
+                        <h2>Variaciones de Productos</h2>
+                        <p>Gestiona las opciones y variantes de tus productos</p>
+                    </div>
+                    <div class="card-content">
+                        <form id="variationsForm">
+                            <div class="form-group">
+                                <label class="form-label" for="variationsFile">
+                                    Archivo CSV de Variaciones
+                                </label>
+                                <div class="file-input-container">
+                                    <input 
+                                        type="file" 
+                                        id="variationsFile" 
+                                        class="file-input" 
+                                        accept=".csv" 
+                                        required
+                                    >
+                                </div>
+                            </div>
+                            
+                            <div class="progress-container" id="variationsProgress">
+                                <div class="progress">
+                                    <div class="progress-bar" id="variationsProgressBar"></div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" id="uploadVariationsBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17,8 12,3 7,8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                Cargar Variaciones
+                            </button>
+                            
+                            <div class="result" id="variationsResult"></div>
+                            
+                            <div class="format-info">
+                                <h4>Formato del archivo CSV:</h4>
+                                <p><code>Establecimiento,Nombre Variacion,Descripcion,EsRequerido,NombreOpcion,Precio,EsDefault,id Productos</code></p>
+                                <p><strong>Ejemplo:</strong></p>
+                                <p><code>La Barra De Pizza,Tamaño,Seleccione el tamaño,TRUE,Chica,0,TRUE,6412</code></p>
+                                <button type="button" class="btn btn-secondary" onclick="downloadVariationsExample()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7,10 12,15 17,10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    Descargar Ejemplo CSV
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+
+
+                <!-- Complementos Card -->
+                <div class="upload-card">
+                    <div class="card-header">
+                        <h2>Complementos de Productos</h2>
+                        <p>Administra los complementos adicionales disponibles</p>
+                    </div>
+                    <div class="card-content">
+                        <form id="complementsForm">
+                            <div class="form-group">
+                                <label class="form-label" for="complementsFile">
+                                    Archivo CSV de Complementos
+                                </label>
+                                <div class="file-input-container">
+                                    <input 
+                                        type="file" 
+                                        id="complementsFile" 
+                                        class="file-input" 
+                                        accept=".csv" 
+                                        required
+                                    >
+                                </div>
+                            </div>
+                            
+                            <div class="progress-container" id="complementsProgress">
+                                <div class="progress">
+                                    <div class="progress-bar" id="complementsProgressBar"></div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" id="uploadComplementsBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17,8 12,3 7,8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                Cargar Complementos
+                            </button>
+                            
+                            <div class="result" id="complementsResult"></div>
+                            
+                            <div class="format-info">
+                                <h4>Formato del archivo CSV:</h4>
+                                <p><code>Establecimiento,Nombre complemento,Precio,id Productos</code></p>
+                                <p><strong>Ejemplo:</strong></p>
+                                <p><code>La Barra De Pizza,Salsa macha,10,"6410,6411,6413,6414,6415,6412"</code></p>
+                                <button type="button" class="btn btn-secondary" onclick="downloadComplementsExample()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7,10 12,15 17,10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    Descargar Ejemplo CSV
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Configuración de la API
+        const API_BASE_URL = 'https://da-pw.tupide.mx/api/menu-mc';
+
+        // Variables globales para categorías
+        let categories = [];
+        let selectedCategoryId = null;
+        
+        // Variables globales para restaurantes
+        let selectedRestaurant = null;
+        let currentRestaurants = [];
+        
+        // Variables globales para productos
+        let currentProducts = [];
+        let groupedProducts = {};
+
+        // Función para abrir modal de productos
+        function openProductsModal() {
+            const modal = document.getElementById('productsModal');
+            modal.classList.add('show');
+        }
+
+        // Función para cerrar modal de productos
+        function closeProductsModal() {
+            const modal = document.getElementById('productsModal');
+            modal.classList.remove('show');
+            // Limpiar formulario
+            document.getElementById('productsForm').reset();
+            document.getElementById('productsResult').innerHTML = '';
+            document.getElementById('productsResult').style.display = 'none';
+            document.getElementById('productsProgress').style.display = 'none';
+        }
+
+        // Función para abrir modal de restaurantes
+        async function openRestaurantsModal(categoryId, categoryName) {
+            try {
+                // Mostrar modal
+                const modal = document.getElementById('restaurantsModal');
+                modal.classList.add('show');
+                
+                // Actualizar título
+                document.getElementById('modalTitle').textContent = `Restaurantes - ${categoryName}`;
+                
+                // Mostrar estado de carga
+                document.getElementById('restaurantsGrid').innerHTML = `
+                    <div class="loading-restaurants">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 6v6l4 2"></path>
+                        </svg>
+                        <p>Cargando restaurantes...</p>
+                    </div>
+                `;
+                
+                // Cargar restaurantes
+                const response = await fetch(`${API_BASE_URL}/restaurants/category/${categoryId}`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    currentRestaurants = result.data;
+                    renderRestaurants(result.data);
+                } else {
+                    showRestaurantsError(result.message || 'Error al cargar restaurantes');
+                }
+            } catch (error) {
+                console.error('Error loading restaurants:', error);
+                showRestaurantsError('Error de conexión al cargar restaurantes');
+            }
+        }
+
+        // Función para cerrar modal
+        function closeRestaurantsModal() {
+            const modal = document.getElementById('restaurantsModal');
+            modal.classList.remove('show');
+            selectedRestaurant = null;
+            currentRestaurants = [];
+        }
+
+        // Función para renderizar restaurantes
+        function renderRestaurants(restaurants) {
+            const grid = document.getElementById('restaurantsGrid');
+            
+            if (!restaurants || restaurants.length === 0) {
+                grid.innerHTML = `
+                    <div class="restaurants-error">
+                        <p>No se encontraron restaurantes para esta categoría</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = restaurants.map(restaurant => {
+                // Construir URL completa para el logo del restaurante
+                const logoUrl = restaurant.picture_logo ? 
+                    `https://da-pw.mx/APPRISA/${restaurant.picture_logo}` : null;
+                
+                return `
+                    <div class="restaurant-card" onclick="selectRestaurant('${restaurant.id_restaurant}', '${restaurant.name_restaurant.replace(/'/g, "\\'")}')"
+                         data-restaurant-id="${restaurant.id_restaurant}">
+                        <div class="restaurant-logo ${!logoUrl ? 'no-image' : ''}">
+                            ${logoUrl ? 
+                                `<img src="${logoUrl}" alt="${restaurant.name_restaurant}" onerror="this.parentElement.innerHTML='${restaurant.name_restaurant.charAt(0).toUpperCase()}'; this.parentElement.classList.add('no-image');">` :
+                                restaurant.name_restaurant.charAt(0).toUpperCase()
+                            }
+                        </div>
+                        <p class="restaurant-name">${restaurant.name_restaurant}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Función para mostrar error
+        function showRestaurantsError(message) {
+            document.getElementById('restaurantsGrid').innerHTML = `
+                <div class="restaurants-error">
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        // Función para seleccionar restaurante (modificada)
+        function selectRestaurant(restaurantId, restaurantName) {
+            // Remover selección anterior
+            document.querySelectorAll('.restaurant-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Agregar selección al card clickeado
+            const selectedCard = document.querySelector(`[data-restaurant-id="${restaurantId}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+            
+            selectedRestaurant = {
+                id: restaurantId,
+                name: restaurantName
+            };
+            
+            console.log('Restaurante seleccionado:', selectedRestaurant);
+            
+            // Cerrar modal y cargar productos
+            closeRestaurantsModal();
+            loadProducts(restaurantId, restaurantName);
+        }
+
+        // Cerrar modal al hacer clic fuera
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('restaurantsModal');
+            if (event.target === modal) {
+                closeRestaurantsModal();
+            }
+        });
+
+        // Cerrar modal con tecla Escape
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const restaurantsModal = document.getElementById('restaurantsModal');
+                const productsModal = document.getElementById('productsModal');
+                
+                if (restaurantsModal.classList.contains('show')) {
+                    closeRestaurantsModal();
+                } else if (productsModal.classList.contains('show')) {
+                    closeProductsModal();
+                }
+            }
+        });
+
+        // Event listeners para cerrar modal de productos
+        document.getElementById('productsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeProductsModal();
+            }
+        });
+
+        // Colores pastel para las categorías
+        const pastelColors = [
+            '#FFE5E5', // Rosa pastel
+            '#E5F3FF', // Azul pastel
+            '#E5FFE5', // Verde pastel
+            '#FFF5E5', // Naranja pastel
+            '#F0E5FF', // Púrpura pastel
+            '#E5FFFF', // Cian pastel
+            '#FFFFE5', // Amarillo pastel
+            '#FFE5F5', // Magenta pastel
+            '#F5FFE5', // Lima pastel
+            '#E5F0FF', // Lavanda pastel
+            '#FFE5D5', // Durazno pastel
+            '#D5FFE5'  // Menta pastel
+        ];
+        
+        // Función para obtener color aleatorio
+        function getRandomPastelColor() {
+            return pastelColors[Math.floor(Math.random() * pastelColors.length)];
+        }
+        
+        // Función para cargar categorías
+        async function loadCategories() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/categories/active`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    categories = result.data;
+                    renderCategories();
+                } else {
+                    showCategoriesError(result.message || 'Error al cargar las categorías');
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                showCategoriesError('Error de conexión al cargar categorías');
+            }
+        }
+        
+        // Función para renderizar categorías
+        function renderCategories() {
+            const container = document.getElementById('categoriesContainer');
+            const loadingElement = document.getElementById('loadingCategories');
+            
+            if (categories.length === 0) {
+                container.innerHTML = '<div class="loading-categories"><p>No hay categorías disponibles</p></div>';
+                return;
+            }
+            
+            loadingElement.style.display = 'none';
+            
+            const categoriesHTML = categories.map(category => {
+                const randomColor = getRandomPastelColor();
+                return `
+                    <div class="category-card" onclick="selectCategory('${category.dc_id}', '${category.dc_name.replace(/'/g, "\'")}')") data-category-id="${category.dc_id}" style="background-color: ${randomColor}; border-color: ${randomColor};">
+                        <div class="category-icon">
+                            ${category.dc_path ? 
+                                `<img src="${category.dc_path.trim()}" alt="${category.dc_name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+                                ''}
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="${category.dc_path ? 'display: none;' : ''}">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21,15 16,10 5,21"></polyline>
+                            </svg>
+                        </div>
+                        <p class="category-name">${category.dc_name}</p>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = categoriesHTML;
+        }
+        
+        // Función para mostrar error en categorías
+        function showCategoriesError(message) {
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = `
+                <div class="loading-categories">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+        
+        // Función para cargar productos
+        async function loadProducts(restaurantId, restaurantName) {
+            try {
+                // Mostrar sección de productos
+                document.getElementById('productsSection').style.display = 'block';
+                document.getElementById('productsTitle').textContent = `Productos - ${restaurantName}`;
+                
+                // Mostrar estado de carga
+                document.getElementById('productsContainer').innerHTML = `
+                    <div class="loading-products">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 6v6l4 2"></path>
+                        </svg>
+                        <p>Cargando productos...</p>
+                    </div>
+                `;
+                
+                // Cargar productos
+                const response = await fetch(`${API_BASE_URL}/products/restaurant/${restaurantId}`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    currentProducts = result.data;
+                    groupProductsByCategory(result.data);
+                    renderProducts();
+                } else {
+                    showProductsError(result.message || 'Error al cargar productos');
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+                showProductsError('Error de conexión al cargar productos');
+            }
+        }
+
+        // Función para agrupar productos por categoría y subcategoría
+        function groupProductsByCategory(products) {
+            groupedProducts = {};
+            
+            products.forEach(productData => {
+                const product = productData.product;
+                const categoryName = product.pg_name || 'Sin categoría';
+                const subcategoryName = product.subcategory_name || 'General';
+                
+                if (!groupedProducts[categoryName]) {
+                    groupedProducts[categoryName] = {};
+                }
+                
+                if (!groupedProducts[categoryName][subcategoryName]) {
+                    groupedProducts[categoryName][subcategoryName] = [];
+                }
+                
+                groupedProducts[categoryName][subcategoryName].push(productData);
+            });
+        }
+
+        // Función para renderizar productos con subcategorías
+        function renderProducts() {
+            const container = document.getElementById('productsContainer');
+            
+            if (Object.keys(groupedProducts).length === 0) {
+                container.innerHTML = `
+                    <div class="products-error">
+                        <p>No se encontraron productos para este restaurante</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const categoriesHTML = Object.entries(groupedProducts).map(([categoryName, subcategories], categoryIndex) => {
+                const categoryId = `category-${categoryIndex}`;
+                const isCollapsed = true;
+                
+                // Contar total de productos en la categoría
+                const totalProducts = Object.values(subcategories).reduce((total, products) => total + products.length, 0);
+                
+                // Generar HTML para subcategorías
+                const subcategoriesHTML = Object.entries(subcategories).map(([subcategoryName, products], subIndex) => {
+                    const subcategoryId = `subcategory-${categoryIndex}-${subIndex}`;
+                    
+                    const productsHTML = products.map(productData => {
+                        const product = productData.product;
+                        const variations = productData.variations || [];
+                        const complements = productData.complements || [];
+                        
+                        // Generar HTML para variaciones
+                        const variationsHTML = variations.length > 0 ? `
+                            <div class="product-variations">
+                                <h5>Variaciones:</h5>
+                                ${variations.map(variation => `
+                                    <div class="variation-item">
+                                        <strong>${variation.name}</strong> ${variation.isRequired ? '(Requerido)' : '(Opcional)'}
+                                        <div class="variation-options">
+                                            ${variation.options.map(option => `
+                                                <span class="variation-option ${option.isDefault ? 'default' : ''}">
+                                                    ${option.name} ${option.priceAdjustment > 0 ? `(+$${option.priceAdjustment})` : ''}
+                                                </span>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : '';
+                        
+                        // Generar HTML para complementos
+                        const complementsHTML = complements.length > 0 ? `
+                            <div class="product-complements">
+                                <h5>Complementos:</h5>
+                                <div class="complements-list">
+                                    ${complements.map(complement => `
+                                        <span class="complement-item ${complement.isRequired ? 'required' : 'optional'}">
+                                            ${complement.name} (+$${complement.price}) ${complement.isRequired ? '(Requerido)' : ''}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : '';
+                        
+                        return `
+                            <div class="product-item">
+                                <div class="product-header">
+                                    <div class="product-info">
+                                        <span class="product-id">${product.pd_id}</span>
+                                        <p class="product-name">${product.pd_name}</p>
+                                        ${product.pd_description ? `<p class="product-description">${product.pd_description}</p>` : ''}
+                                    </div>
+                                    <span class="product-price">$${parseFloat(product.pd_unit_price || 0).toFixed(2)}</span>
+                                </div>
+                                ${variationsHTML}
+                                ${complementsHTML}
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    return `
+                        <div class="product-subcategory collapsed" id="${subcategoryId}">
+                            <div class="subcategory-header" onclick="toggleSubcategory('${subcategoryId}')">
+                                <div class="subcategory-title">
+                                    ${subcategoryName}
+                                    <span class="subcategory-count">${products.length}</span>
+                                </div>
+                                <div class="subcategory-toggle">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6,9 12,15 18,9"></polyline>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="subcategory-products">
+                                ${productsHTML}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                return `
+                    <div class="product-category ${isCollapsed ? 'collapsed' : ''}" id="${categoryId}">
+                        <div class="product-category-header" onclick="toggleCategory('${categoryId}')">
+                            <div class="product-category-title">
+                                ${categoryName}
+                                <span class="category-count">${totalProducts}</span>
+                            </div>
+                            <div class="category-toggle">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6,9 12,15 18,9"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="product-list-container">
+                            <div class="product-list">
+                                ${subcategoriesHTML}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = categoriesHTML;
+        }
+
+        // Función para alternar colapso de categoría
+        function toggleCategory(categoryId) {
+            const category = document.getElementById(categoryId);
+            if (category) {
+                category.classList.toggle('collapsed');
+            }
+        }
+
+        // Función para alternar subcategoría
+        function toggleSubcategory(subcategoryId) {
+            const subcategory = document.getElementById(subcategoryId);
+            if (subcategory) {
+                subcategory.classList.toggle('collapsed');
+            }
+        }
+
+        // Función para expandir todas las categorías
+        function expandAllCategories() {
+            document.querySelectorAll('.product-category').forEach(category => {
+                category.classList.remove('collapsed');
+            });
+            document.querySelectorAll('.product-subcategory').forEach(subcategory => {
+                subcategory.classList.remove('collapsed');
+            });
+        }
+
+        // Función para colapsar todas las categorías
+        function collapseAllCategories() {
+            document.querySelectorAll('.product-category').forEach(category => {
+                category.classList.add('collapsed');
+            });
+            document.querySelectorAll('.product-subcategory').forEach(subcategory => {
+                subcategory.classList.add('collapsed');
+            });
+        }
+
+        // Función para mostrar error en productos
+        function showProductsError(message) {
+            document.getElementById('productsContainer').innerHTML = `
+                <div class="products-error">
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        // Función para volver a mostrar categorías
+        function showCategories() {
+            document.getElementById('productsSection').style.display = 'none';
+            currentProducts = [];
+            groupedProducts = {};
+        }
+
+        // Función para colapsar/expandir todas las categorías
+        function toggleAllCategories(collapse = null) {
+            if (collapse === false) {
+                expandAllCategories();
+            } else if (collapse === true) {
+                collapseAllCategories();
+            }
+        }
+
+        // Función para seleccionar categoría (modificada)
+        function selectCategory(categoryId, categoryName) {
+            // Marcar categoría como seleccionada visualmente
+            document.querySelectorAll('.category-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            const selectedCard = document.querySelector(`[data-category-id="${categoryId}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+            
+            selectedCategoryId = categoryId;
+            
+            // Abrir modal de restaurantes
+            openRestaurantsModal(categoryId, categoryName);
+        }
+        
+        // Función para deslizar categorías
+        function slideCategories(direction) {
+            const container = document.getElementById('categoriesContainer');
+            const scrollAmount = 200;
+            
+            if (direction === 'prev') {
+                container.scrollLeft -= scrollAmount;
+            } else {
+                container.scrollLeft += scrollAmount;
+            }
+        }
+        
+        // Función para mostrar progreso
+        function showProgress(progressId, progressBarId) {
+            const progressContainer = document.getElementById(progressId);
+            progressContainer.style.display = 'block';
+            
+            let width = 0;
+            const interval = setInterval(() => {
+                if (width >= 90) {
+                    clearInterval(interval);
+                } else {
+                    width += 10;
+                    document.getElementById(progressBarId).style.width = width + '%';
+                }
+            }, 100);
+            return interval;
+        }
+        
+        // Función para ocultar progreso
+        function hideProgress(progressId, progressBarId, interval) {
+            clearInterval(interval);
+            document.getElementById(progressBarId).style.width = '100%';
+            setTimeout(() => {
+                document.getElementById(progressId).style.display = 'none';
+                document.getElementById(progressBarId).style.width = '0%';
+            }, 500);
+        }
+        
+        // Función para mostrar resultado
+        function showResult(resultId, message, isSuccess) {
+            const resultDiv = document.getElementById(resultId);
+            resultDiv.textContent = message;
+            resultDiv.className = `result ${isSuccess ? 'success' : 'error'}`;
+            resultDiv.style.display = 'block';
+        }
+        
+        // Función para subir archivo
+        async function uploadFile(file, endpoint, progressId, progressBarId, resultId, btnId) {
+            const formData = new FormData();
+            formData.append('csv_file', file);
+            
+            const btn = document.getElementById(btnId);
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> Procesando...';
+            
+            const progressInterval = showProgress(progressId, progressBarId);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                hideProgress(progressId, progressBarId, progressInterval);
+                
+                if (response.ok && result.status) {
+                    showResult(resultId, result.message || 'Archivo procesado exitosamente', true);
+                } else {
+                    showResult(resultId, result.message || 'Error al procesar el archivo', false);
+                }
+            } catch (error) {
+                hideProgress(progressId, progressBarId, progressInterval);
+                showResult(resultId, 'Error de conexión: ' + error.message, false);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+        
+        // Mejorar experiencia de selección de archivos
+        function setupFileInput(inputId) {
+            const input = document.getElementById(inputId);
+            
+            input.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    this.classList.add('file-selected');
+                    this.style.color = 'var(--success-green)';
+                    this.setAttribute('data-text', `Archivo seleccionado: ${this.files[0].name}`);
+                } else {
+                    this.classList.remove('file-selected');
+                    this.style.color = '';
+                    this.removeAttribute('data-text');
+                }
+            });
+            
+            // Drag and drop
+            ['dragover', 'dragenter'].forEach(eventName => {
+                input.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    input.style.borderColor = 'var(--primary-yellow)';
+                    input.style.background = '#FFFBEB';
+                });
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                input.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    input.style.borderColor = '';
+                    input.style.background = '';
+                });
+            });
+            
+            input.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const files = e.dataTransfer.files;
+                if (files.length > 0 && files[0].name.endsWith('.csv')) {
+                    input.files = files;
+                    input.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+        
+        // Event listeners para los formularios
+        document.getElementById('variationsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('variationsFile').files[0];
+            
+            if (!file) {
+                showResult('variationsResult', 'Por favor selecciona un archivo CSV', false);
+                return;
+            }
+            
+            if (!file.name.endsWith('.csv')) {
+                showResult('variationsResult', 'El archivo debe tener extensión .csv', false);
+                return;
+            }
+            
+            await uploadFile(
+                file, 
+                '/upload-variations-csv', 
+                'variationsProgress', 
+                'variationsProgressBar', 
+                'variationsResult', 
+                'uploadVariationsBtn'
+            );
+        });
+        
+        // Manejo del formulario de productos
+        document.getElementById('productsForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('productsFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showResult('productsResult', 'Por favor selecciona un archivo CSV', false);
+                return;
+            }
+            
+            if (!file.name.endsWith('.csv')) {
+                showResult('productsResult', 'El archivo debe tener extensión .csv', false);
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('csv_file', file);
+            
+            const btn = document.getElementById('uploadProductsBtn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> Procesando...';
+            
+            const progressInterval = showProgress('productsProgress', 'productsProgressBar');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/addProductsCsv`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                hideProgress('productsProgress', 'productsProgressBar', progressInterval);
+                
+                if (response.ok && result.status) {
+                    showResult('productsResult', result.message || 'Productos cargados exitosamente', true);
+                    fileInput.value = ''; // Limpiar el input
+                } else {
+                    showResult('productsResult', result.message || 'Error al cargar productos', false);
+                }
+            } catch (error) {
+                hideProgress('productsProgress', 'productsProgressBar', progressInterval);
+                showResult('productsResult', 'Error de conexión: ' + error.message, false);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+        
+        document.getElementById('complementsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('complementsFile').files[0];
+            
+            if (!file) {
+                showResult('complementsResult', 'Por favor selecciona un archivo CSV', false);
+                return;
+            }
+            
+            if (!file.name.endsWith('.csv')) {
+                showResult('complementsResult', 'El archivo debe tener extensión .csv', false);
+                return;
+            }
+            
+            await uploadFile(
+                file, 
+                '/upload-complements-csv', 
+                'complementsProgress', 
+                'complementsProgressBar', 
+                'complementsResult', 
+                'uploadComplementsBtn'
+            );
+        });
+        
+        // Inicializar inputs de archivo
+        setupFileInput('variationsFile');
+        setupFileInput('complementsFile');
+        
+        // Configurar input de productos cuando se abra el modal
+        document.getElementById('productsModal').addEventListener('transitionend', function() {
+            if (this.classList.contains('show')) {
+                setupFileInput('productsFile');
+            }
+        });
+        
+        // Cargar categorías al inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCategories();
+            setupFileInput('productsFile');
+        });
+        
+        // Función para descargar ejemplo de variaciones
+        function downloadVariationsExample() {
+            const csvContent = `Establecimiento,Nombre Variacion,Descripcion,EsRequerido,NombreOpcion,Precio,EsDefault,id Productos
+La Barra De Pizza,Tamaño,Seleccione el tamaño,TRUE,Chica,0,TRUE,6412
+La Barra De Pizza,Tamaño,Seleccione el tamaño,TRUE,Mediana,30,FALSE,6412
+La Barra De Pizza,Tamaño,Seleccione el tamaño,TRUE,Grande,60,FALSE,6412
+La Barra De Pizza,Tamaño,Seleccione el tamaño,TRUE,Familiar,90,FALSE,6412
+La Barra De Pizza,Masa,Seleccione su masa,TRUE,Orilla rellena de queso,30,FALSE,"6410,6411,6413,6414,6415"
+La Barra De Pizza,Masa,Seleccione su masa,TRUE,Sarten,30,FALSE,"6410,6411,6413,6414,6415"
+La Barra De Pizza,Masa,Seleccione su masa,TRUE,Original,0,TRUE,"6410,6411,6413,6414,6415"
+La Barra De Pizza,Masa,Seleccione su masa,TRUE,Delgada,0,FALSE,"6410,6411,6413,6414,6415"
+La Barra De Pizza,Masa,Seleccione su masa,TRUE,Italiana,20,FALSE,"6410,6411,6413,6414,6415"`;
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'ejemplo_variaciones.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Función para descargar ejemplo de productos CSV
+        function downloadProductsExample() {
+            const csvContent = `Establecimiento,Nombre Producto,Descripcion,Precio,Categoria,Estado
+La Barra De Pizza,Pizza Margherita,Pizza clásica con tomate y mozzarella,150,Pizzas,Activo
+La Barra De Pizza,Pizza Pepperoni,Pizza con pepperoni y mozzarella,180,Pizzas,Activo
+La Barra De Pizza,Ensalada César,Ensalada fresca con aderezo césar,120,Ensaladas,Activo`;
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'ejemplo_productos.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Función para descargar ejemplo de complementos
+        function downloadComplementsExample() {
+            const csvContent = `Establecimiento,Nombre complemento,Precio,id Productos
+La Barra De Pizza,Salsa macha,10,"6410,6411,6413,6414,6415,6412"
+La Barra De Pizza,Salsa de habanero,5,"6410,6411,6413,6414,6415,6412"
+La Barra De Pizza,Dips,10,"6410,6411,6413,6414,6415,6412"`;
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'ejemplo_complementos.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
