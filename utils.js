@@ -167,3 +167,19 @@ Utils.fetchJSON = async function(url, options = {}) {
         throw error;
     }
 };
+
+// Crear el objeto Utils si no existe
+window.Utils = window.Utils || {};
+
+// Añadir la función downloadCSV al objeto Utils
+Utils.downloadCSV = function(csvContent, fileName) {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
