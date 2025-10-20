@@ -179,7 +179,7 @@ function renderCategories() {
     const categoriesHTML = categories.map(category => `
         <div class="category-card" onclick="loadRestaurantsByCategory(${category.dc_id})">
             <img class="category-image" src="${category.dc_path}" alt="${category.dc_name}">
-            <h3>${category.dc_name}</h3>
+            <p>${category.dc_name}</p>
         </div>
     `).join('');
     

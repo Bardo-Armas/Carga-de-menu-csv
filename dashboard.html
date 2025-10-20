@@ -336,6 +336,21 @@
                 await window.AuthManager.requireAuth();
                 console.log('Usuario autenticado');
                 
+                // Mostrar información del usuario
+                const userData = window.AuthManager.getUser();
+                if (userData) {
+                    const userWelcome = document.getElementById('userWelcome');
+                    const userRole = document.getElementById('userRole');
+                    
+                    if (userWelcome) {
+                        userWelcome.textContent = `¡Bienvenido, ${userData.name}!`;
+                    }
+                    
+                    if (userRole) {
+                        userRole.textContent = userData.role;
+                    }
+                }
+                
                 // Configurar logout
                 const logoutBtn = document.getElementById('logoutBtn');
                 if (logoutBtn) {
