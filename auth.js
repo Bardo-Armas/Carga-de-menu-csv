@@ -2,24 +2,19 @@
 class AuthManager {
     constructor() {
         this.config = null;
-        this.initializeLogin();
     }
-    
+
     async initializeLogin() {
-        // Esperar a que la configuración esté lista
-        this.config = await window.getConfig();
-        
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', (e) => this.handleLogin(e));
-        }
-        
-        // Verificar si ya está autenticado
-        if (this.isAuthenticated() && window.location.pathname.includes('index.html')) {
-            window.location.href = 'dashboard.html';
+        try {
+            if (!this.config) {
+                this.config = await window.getConfig();
+            }
+        } catch (error) {
+            console.error('Error inicializando AuthManager:', error);
+            throw error;
         }
     }
-    
+
     async handleLogin(event) {
         event.preventDefault();
         
@@ -83,11 +78,29 @@ class AuthManager {
             loading.style.display = 'none';
         }
     }
-    
+
     isRoleAllowed(role) {
         return this.config.ALLOWED_ROLES.includes(role);
     }
-    
+
+    async requireAuth() {
+        try {
+            if (!this.config) {
+                await this.initializeLogin();
+            }
+            
+            if (!this.isAuthenticated()) {
+                window.location.href = 'index.html';
+                return false;
+            }
+            return true;
+        } catch (error) {
+            console.error('Error en requireAuth:', error);
+            window.location.href = 'index.html';
+            return false;
+        }
+    }
+
     isAuthenticated() {
         const user = this.getUser();
         const session = this.getSession();
@@ -97,48 +110,36 @@ class AuthManager {
         }
         return false;
     }
-    
+
     getUser() {
         const userStr = localStorage.getItem(this.config?.AUTH_USER_KEY || 'auth_user');
         return userStr ? JSON.parse(userStr) : null;
     }
-    
+
     getSession() {
         const sessionStr = localStorage.getItem(this.config?.AUTH_SESSION_KEY || 'auth_session');
         return sessionStr ? JSON.parse(sessionStr) : null;
     }
-    
+
     getUserRole() {
         const user = this.getUser();
         return user ? user.role : null;
     }
-    
+
     hasRole(role) {
         return this.getUserRole() === role;
     }
-    
-    hasAnyRole(roles) {
-        const userRole = this.getUserRole();
-        return roles.includes(userRole);
-    }
-    
+
     async logout() {
         if (!this.config) {
-            this.config = await window.getConfig();
+            await this.initializeLogin();
         }
+        
         localStorage.removeItem(this.config.AUTH_USER_KEY);
         localStorage.removeItem(this.config.AUTH_SESSION_KEY);
         window.location.href = 'index.html';
     }
-    
-    async requireAuth() {
-        if (!this.isAuthenticated()) {
-            window.location.href = 'index.html';
-            return false;
-        }
-        return true;
-    }
-    
+
     async requireRole(requiredRoles) {
         if (!this.config) {
             this.config = await window.getConfig();
@@ -156,7 +157,7 @@ class AuthManager {
         
         return true;
     }
-    
+
     getAuthHeaders() {
         const session = this.getSession();
         if (session && session.token) {
@@ -168,8 +169,18 @@ class AuthManager {
     }
 }
 
+// Crear instancia global
 const authManager = new AuthManager();
 
+// Asegurar que esté disponible globalmente
 if (typeof window !== 'undefined') {
     window.AuthManager = authManager;
+    
+    // También hacer que los métodos estén disponibles directamente
+    window.AuthManager.requireAuth = authManager.requireAuth.bind(authManager);
+    window.AuthManager.getUser = authManager.getUser.bind(authManager);
+    window.AuthManager.logout = authManager.logout.bind(authManager);
+    window.AuthManager.isAuthenticated = authManager.isAuthenticated.bind(authManager);
+    
+    console.log('AuthManager inicializado y disponible globalmente');
 }

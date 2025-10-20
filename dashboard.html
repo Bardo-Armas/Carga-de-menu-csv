@@ -310,7 +310,6 @@
     <script src="auth.js"></script>
     <script src="utils.js"></script>
     <script src="main.js"></script>
-    
     <script>
         // Proteger la página principal
         document.addEventListener('DOMContentLoaded', async function() {
@@ -335,9 +334,27 @@
                 
                 console.log('Variables de entorno:', window.ENV);
                 
+                // ESPERAR A QUE AUTHMANAGER ESTÉ DISPONIBLE
+                console.log('Verificando AuthManager...');
+                let attempts = 0;
+                const maxAttempts = 50; // 5 segundos máximo
+                
+                while ((!window.AuthManager || typeof window.AuthManager.requireAuth !== 'function') && attempts < maxAttempts) {
+                    console.log(`Esperando AuthManager... intento ${attempts + 1}`);
+                    await new Promise(resolve => setTimeout(resolve, 100)); // Esperar 100ms
+                    attempts++;
+                }
+                
+                if (!window.AuthManager || typeof window.AuthManager.requireAuth !== 'function') {
+                    throw new Error('AuthManager no está disponible después de esperar');
+                }
+                
+                console.log('AuthManager disponible:', window.AuthManager);
+                
                 // Verificar autenticación
                 console.log('Verificando autenticación...');
-                if (!AuthManager.requireAuth()) {
+                const isAuthenticated = await window.AuthManager.requireAuth();
+                if (!isAuthenticated) {
                     console.log('Usuario no autenticado, redirigiendo...');
                     return;
                 }
@@ -345,26 +362,33 @@
                 console.log('Usuario autenticado');
                 
                 // Mostrar información del usuario
-                const user = AuthManager.getUser();
+                const user = window.AuthManager.getUser();
                 if (user) {
-                    document.getElementById('userWelcome').textContent = `Bienvenido, ${user.name}`;
-                    document.getElementById('userRole').textContent = `(${user.role})`;
+                    const welcomeElement = document.getElementById('userWelcome');
+                    const roleElement = document.getElementById('userRole');
+                    
+                    if (welcomeElement) welcomeElement.textContent = `Bienvenido, ${user.name}`;
+                    if (roleElement) roleElement.textContent = `(${user.role})`;
+                    
                     console.log('Información de usuario mostrada:', user);
                 }
                 
                 // Configurar logout
-                document.getElementById('logoutBtn').addEventListener('click', () => {
-                    AuthManager.logout();
-                });
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', () => {
+                        window.AuthManager.logout();
+                    });
+                }
                 
                 // Verificar que loadCategories existe
-                if (typeof loadCategories !== 'function') {
+                if (typeof window.loadCategories !== 'function') {
                     throw new Error('Función loadCategories no está disponible');
                 }
                 
                 // Inicializar el dashboard
                 console.log('Iniciando carga de categorías...');
-                await loadCategories();
+                await window.loadCategories();
                 console.log('Dashboard inicializado correctamente');
                 
             } catch (error) {
