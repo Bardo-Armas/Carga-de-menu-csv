@@ -173,13 +173,29 @@ window.Utils = window.Utils || {};
 
 // Añadir la función downloadCSV al objeto Utils
 Utils.downloadCSV = function(csvContent, fileName) {
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Crear un elemento <a> invisible
     const link = document.createElement('a');
+    
+    // Crear un blob con el contenido CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Crear una URL para el blob
     const url = URL.createObjectURL(blob);
+    
+    // Configurar el enlace
     link.setAttribute('href', url);
     link.setAttribute('download', fileName);
     link.style.visibility = 'hidden';
+    
+    // Añadir el enlace al DOM
     document.body.appendChild(link);
+    
+    // Simular clic en el enlace
     link.click();
+    
+    // Limpiar: eliminar el enlace del DOM
     document.body.removeChild(link);
+    
+    // Liberar la URL del objeto
+    URL.revokeObjectURL(url);
 };
