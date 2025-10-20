@@ -59,26 +59,26 @@ class EnvLoader {
         const envVars = {};
         const lines = envText.split('\n');
         
-        lines.forEach(line => {
-            line = line.trim();
-            if (line && !line.startsWith('#')) {
-                const [key, ...valueParts] = line.split('=');
+        for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (trimmedLine && !trimmedLine.startsWith('#')) {
+                const [key, ...valueParts] = trimmedLine.split('=');
                 if (key && valueParts.length > 0) {
-                    envVars[key.trim()] = valueParts.join('=').trim();
+                    envVars[key.trim()] = valueParts.join('=').trim().replace(/^["']|["']$/g, '');
                 }
             }
-        });
+        }
         
         return envVars;
     }
 }
 
-// Cargar variables de entorno al inicializar
+// Cargar variables de entorno inmediatamente y esperar
 if (typeof window !== 'undefined') {
-    EnvLoader.loadEnv();
+    // Crear una promesa global para que otros scripts puedan esperar
+    window.envLoaded = EnvLoader.loadEnv();
 }
 
-// Exportar para uso en otros módulos
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = EnvLoader;
 } else {

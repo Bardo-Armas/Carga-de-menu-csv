@@ -1,10 +1,14 @@
 // Sistema de autenticación basado en roles
 class AuthManager {
     constructor() {
+        this.config = null;
         this.initializeLogin();
     }
     
-    initializeLogin() {
+    async initializeLogin() {
+        // Esperar a que la configuración esté lista
+        this.config = await window.getConfig();
+        
         const loginForm = document.getElementById('loginForm');
         if (loginForm) {
             loginForm.addEventListener('submit', (e) => this.handleLogin(e));
@@ -12,14 +16,19 @@ class AuthManager {
         
         // Verificar si ya está autenticado
         if (this.isAuthenticated() && window.location.pathname.includes('index.html')) {
-            window.location.href = 'dashboard.html';  // Cambiar aquí
+            window.location.href = 'dashboard.html';
         }
     }
     
     async handleLogin(event) {
         event.preventDefault();
         
-        const username = document.getElementById('username').value; // Cambiar variable name
+        // Asegurar que tenemos la configuración
+        if (!this.config) {
+            this.config = await window.getConfig();
+        }
+        
+        const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
         const loginBtn = document.getElementById('loginBtn');
         const loading = document.getElementById('loading');
@@ -31,14 +40,14 @@ class AuthManager {
         errorMessage.style.display = 'none';
         
         try {
-            const response = await fetch(CONFIG.LOGIN_API_URL, {
+            const response = await fetch(this.config.LOGIN_API_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
                 body: JSON.stringify({
-                    username: username,  // Cambiar de email a username
+                    username: username,
                     password: password
                 })
             });
