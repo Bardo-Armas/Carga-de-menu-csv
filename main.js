@@ -590,14 +590,19 @@ document.getElementById('variationsForm').addEventListener('submit', async (e) =
     
     try {
         const formData = new FormData();
-        formData.append('file', file); // Cambiar de 'csv_file' a 'file'
+        formData.append('file', file);
         
-        const response = await fetch(`${API_BASE_URL}/upload-variations-csv`, {
+        const config = await getConfigCache();
+        const response = await fetch(`${config.API_BASE_URL}/upload-variations-csv`, {
             method: 'POST',
             body: formData
-            // No headers - dejar que el navegador maneje Content-Type automáticamente
         });
         
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            const text = await response.text();
+            throw new Error(`Respuesta no JSON (${response.status}). Body: ${text.slice(0,200)}`);
+        }
         const result = await response.json();
         
         Utils.hideProgress('variationsProgress', 'variationsProgressBar', progressInterval);
@@ -690,17 +695,21 @@ document.getElementById('productsForm').addEventListener('submit', async functio
         }
         
         // Enviar datos parseados como JSON
-        const response = await fetch(`${API_BASE_URL}/addProductsCsv`, {
+        const config = await getConfigCache();
+        const response = await fetch(`${config.API_BASE_URL}/addProductsCsv`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({
-                data: parsedData
-            })
+            body: JSON.stringify({ data: parsedData })
         });
         
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            const text = await response.text();
+            throw new Error(`Respuesta no JSON (${response.status}). Body: ${text.slice(0,200)}`);
+        }
         const result = await response.json();
         
         Utils.hideProgress('productsProgress', 'productsProgressBar', progressInterval);
@@ -738,14 +747,19 @@ document.getElementById('complementsForm').addEventListener('submit', async (e) 
     
     try {
         const formData = new FormData();
-        formData.append('file', file); // Cambiar de 'csv_file' a 'file'
+        formData.append('file', file);
         
-        const response = await fetch(`${API_BASE_URL}/upload-complements-csv`, {
+        const config = await getConfigCache();
+        const response = await fetch(`${config.API_BASE_URL}/upload-complements-csv`, {
             method: 'POST',
             body: formData
-            // No headers - dejar que el navegador maneje Content-Type automáticamente
         });
         
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            const text = await response.text();
+            throw new Error(`Respuesta no JSON (${response.status}). Body: ${text.slice(0,200)}`);
+        }
         const result = await response.json();
         
         Utils.hideProgress('complementsProgress', 'complementsProgressBar', progressInterval);
