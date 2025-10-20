@@ -523,10 +523,34 @@ La Barra De Pizza,Masa,Seleccione su masa,TRUE,Original,0,TRUE,"6410,6411,6413,6
 La Barra De Pizza,Masa,Seleccione su masa,TRUE,Delgada,0,FALSE,"6410,6411,6413,6414,6415"
 La Barra De Pizza,Masa,Seleccione su masa,TRUE,Italiana,20,FALSE,"6410,6411,6413,6414,6415"`;
     
-    Utils.downloadCSV(csvContent, 'ejemplo_variaciones.csv');
+    // Crear un elemento <a> invisible
+    const link = document.createElement('a');
+    
+    // Crear un blob con el contenido CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Crear una URL para el blob
+    const url = URL.createObjectURL(blob);
+    
+    // Configurar el enlace
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'ejemplo_variaciones.csv');
+    link.style.visibility = 'hidden';
+    
+    // Añadir el enlace al DOM
+    document.body.appendChild(link);
+    
+    // Simular clic en el enlace
+    link.click();
+    
+    // Limpiar: eliminar el enlace del DOM
+    document.body.removeChild(link);
+    
+    // Liberar la URL del objeto
+    URL.revokeObjectURL(url);
 }
 
-// Función para descargar ejemplo de productos
+// Implementa de manera similar las otras funciones de descarga
 function downloadProductsExample() {
     const csvContent = `Establecimiento,Categoria,Subcategoria,Nombre,Descripcion,Precio,Imagen
 La Barra De Pizza,Pizzas,Especialidades,Pizza Hawaiana,Deliciosa pizza con piña y jamón,180,https://example.com/pizza.jpg`;
@@ -837,21 +861,12 @@ async function getConfigCache() {
 // Función para cargar restaurantes por categoría
 async function loadRestaurantsByCategory(categoryId) {
     try {
-        const config = await getConfigCache();
-        const url = `${config.API_BASE_URL}/restaurants/category/${categoryId}`;
+        // Obtener el nombre de la categoría
+        const categoryElement = document.querySelector(`.category-card[onclick="loadRestaurantsByCategory(${categoryId})"] p`);
+        const categoryName = categoryElement ? categoryElement.textContent : 'Categoría';
         
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const result = await response.json();
-        if (result.success) {
-            // Manejar la respuesta de restaurantes
-            console.log('Restaurantes cargados:', result.data);
-        } else {
-            throw new Error(result.message || 'Error al cargar restaurantes');
-        }
+        // Abrir el modal de restaurantes con la categoría seleccionada
+        openRestaurantsModal(categoryId, categoryName);
     } catch (error) {
         console.error('Error cargando restaurantes:', error);
         alert(`Error al cargar restaurantes: ${error.message}`);
