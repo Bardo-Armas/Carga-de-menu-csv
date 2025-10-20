@@ -281,51 +281,89 @@ Utils.downloadCSV = function(csvContent, fileName) {
 
 // Función para subir archivo
 Utils.uploadFile = async function(file, endpoint, progressId, progressBarId, resultId, btnId) {
+    console.log('Iniciando uploadFile:', { 
+        file: file ? { name: file.name, size: file.size, type: file.type } : 'No file', 
+        endpoint, 
+        progressId, 
+        progressBarId, 
+        resultId, 
+        btnId 
+    });
+    
     const formData = new FormData();
     formData.append('file', file);
+    console.log('FormData creado con archivo:', file ? file.name : 'No file');
     
     const btn = document.getElementById(btnId);
     const originalText = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> Procesando...';
+    console.log('Botón deshabilitado:', btnId);
     
     const progressInterval = Utils.showProgress(progressId, progressBarId);
+    console.log('Barra de progreso iniciada');
     
     try {
+        console.log('Obteniendo configuración...');
         if (!UTILS_CONFIG_CACHE) {
             UTILS_CONFIG_CACHE = await window.getConfig();
+            console.log('Configuración obtenida:', UTILS_CONFIG_CACHE);
+        } else {
+            console.log('Usando configuración en caché');
         }
         
-        const response = await fetch(`${UTILS_CONFIG_CACHE.API_BASE_URL}${endpoint}`, {
+        const url = `${UTILS_CONFIG_CACHE.API_BASE_URL}${endpoint}`;
+        console.log('URL de la petición:', url);
+        
+        console.log('Iniciando fetch a:', url);
+        const response = await fetch(url, {
             method: 'POST',
             body: formData,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         });
+        console.log('Respuesta recibida:', { 
+            status: response.status, 
+            ok: response.ok, 
+            headers: [...response.headers.entries()].reduce((obj, [key, val]) => {
+                obj[key] = val;
+                return obj;
+            }, {}) 
+        });
         
         const contentType = response.headers.get('content-type') || '';
+        console.log('Content-Type de la respuesta:', contentType);
+        
         if (!contentType.includes('application/json')) {
             const text = await response.text();
+            console.error('Respuesta no JSON:', text);
             throw new Error(`Respuesta no JSON (${response.status}). Body: ${text.slice(0,200)}`);
         }
         
+        console.log('Parseando respuesta JSON...');
         const result = await response.json();
+        console.log('Respuesta JSON:', result);
         
         Utils.hideProgress(progressId, progressBarId, progressInterval);
+        console.log('Barra de progreso ocultada');
         
         if (response.ok && result.status) {
+            console.log('Operación exitosa');
             Utils.showResult(resultId, result.message || 'Archivo procesado exitosamente', true);
             return true;
         } else {
+            console.error('Error en la respuesta:', result);
             Utils.showResult(resultId, result.message || 'Error al procesar el archivo', false);
             return false;
         }
     } catch (error) {
+        console.error('Error en uploadFile:', error);
         Utils.hideProgress(progressId, progressBarId, progressInterval);
         Utils.showResult(resultId, 'Error de conexión: ' + error.message, false);
         return false;
     } finally {
+        console.log('Finalizando uploadFile, restaurando botón');
         btn.disabled = false;
         btn.innerHTML = originalText;
     }
