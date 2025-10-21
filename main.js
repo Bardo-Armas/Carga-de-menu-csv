@@ -694,7 +694,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const file = document.getElementById('variationsFile').files[0];
             console.log('Archivo seleccionado:', file ? { name: file.name, size: file.size, type: file.type } : 'No file');
             
-            const validation = Utils.validateFile(file);
+            // Añadir await aquí para esperar el resultado de la validación
+            const validation = await Utils.validateFile(file);
             console.log('Resultado de validación:', validation);
             if (!validation.valid) {
                 console.log('Validación fallida, mostrando error');
@@ -722,7 +723,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const file = document.getElementById('complementsFile').files[0];
             console.log('Archivo seleccionado:', file ? { name: file.name, size: file.size, type: file.type } : 'No file');
             
-            const validation = Utils.validateFile(file);
+            // Añadir await aquí para esperar el resultado de la validación
+            const validation = await Utils.validateFile(file);
             console.log('Resultado de validación:', validation);
             if (!validation.valid) {
                 console.log('Validación fallida, mostrando error');
