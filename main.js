@@ -837,14 +837,15 @@ document.addEventListener('DOMContentLoaded', async function() {
                     const config = await getConfigCache();
                     const apiUrl = `${config.API_BASE_URL}/addProductsCsv`;
                     
-                    // Crear FormData con el JSON
-                    const formData = new FormData();
-                    formData.append('data', JSON.stringify(jsonData));
-                    
                     console.log('Enviando solicitud a:', apiUrl);
                     const response = await fetch(apiUrl, {
                         method: 'POST',
-                        body: formData
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            data: jsonData
+                        })
                     });
                     
                     console.log('Respuesta recibida:', response.status, response.statusText);
