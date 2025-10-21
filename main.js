@@ -747,75 +747,118 @@ document.addEventListener('DOMContentLoaded', function() {
     // Event listeners para variationsForm y complementsForm que ya existen
     
     // Añadir event listener para productsForm
-    const productsForm = document.getElementById('productsForm');
-    if (productsForm) {
-        console.log('Añadiendo event listener a productsForm');
-        productsForm.addEventListener('submit', async (e) => {
-            console.log('Evento submit de productsForm capturado');
-            e.preventDefault();
-            const file = document.getElementById('productsFile').files[0];
-            console.log('Archivo seleccionado:', file ? { name: file.name, size: file.size, type: file.type } : 'No file');
-            
-            // Validar el archivo antes de proceder
-            const validation = await Utils.validateFile(file);
-            console.log('Resultado de validación:', validation);
-            if (!validation.valid) {
-                console.log('Validación fallida, mostrando error');
-                Utils.showResult('productsResult', validation.message, false);
-                return;
-            }
-            
-            console.log('Iniciando carga de productos');
-            
-            // Crear FormData y añadir el archivo
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            // Actualizar estado del botón
-            const uploadBtn = document.getElementById('uploadProductsBtn');
-            const originalBtnText = uploadBtn.innerHTML;
-            uploadBtn.disabled = true;
-            uploadBtn.innerHTML = '<span class="spinner"></span> Cargando...';
-            
-            // Mostrar barra de progreso
-            const progressContainer = document.getElementById('productsProgress');
-            const progressBar = document.getElementById('productsProgressBar');
-            progressContainer.style.display = 'block';
-            progressBar.style.width = '0%';
-            
-            try {
-                // Obtener configuración
-                const config = await getConfigCache();
-                const apiUrl = `${config.API_BASE_URL}/addProductsCsv`;
-                
-                console.log('Enviando solicitud a:', apiUrl);
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                console.log('Respuesta recibida:', response.status, response.statusText);
-                
-                // Procesar respuesta
-                if (response.ok) {
-                    const result = await response.json();
-                    console.log('Resultado:', result);
-                    Utils.showResult('productsResult', result.message || 'Productos cargados exitosamente', true);
-                } else {
-                    const errorData = await response.json().catch(() => ({}));
-                    console.error('Error en la respuesta:', errorData);
-                    Utils.showResult('productsResult', errorData.message || 'Error al cargar productos', false);
-                }
-            } catch (error) {
-                console.error('Error al cargar productos:', error);
-                Utils.showResult('productsResult', `Error: ${error.message}`, false);
-            } finally {
-                // Restaurar estado del botón
-                uploadBtn.disabled = false;
-                uploadBtn.innerHTML = originalBtnText;
-            }
+    // Agregar estas funciones auxiliares al principio del archivo o donde sea apropiado
+    function readFileAsText(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = event => resolve(event.target.result);
+            reader.onerror = error => reject(error);
+            reader.readAsText(file);
         });
     }
+    
+    function csvToJson(csvText) {
+        const lines = csvText.split('\n');
+        const headers = lines[0].split(',').map(header => header.trim());
+        const result = [];
+        
+        for (let i = 1; i < lines.length; i++) {
+            if (!lines[i].trim()) continue; // Saltar líneas vacías
+            
+            const values = lines[i].split(',').map(value => value.trim());
+            const obj = {};
+            
+            for (let j = 0; j < headers.length; j++) {
+                obj[headers[j]] = values[j] || '';
+            }
+            
+            result.push(obj);
+        }
+        
+        return result;
+    }
+    
+    // Reemplazar el código existente del manejador del formulario de productos
+    document.addEventListener('DOMContentLoaded', async function() {
+        // ... código existente ...
+        
+        // Configurar el formulario de productos
+        const productsForm = document.getElementById('productsForm');
+        if (productsForm) {
+            productsForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const fileInput = document.getElementById('productsFile');
+                const file = fileInput.files[0];
+                
+                if (!file) {
+                    Utils.showResult('productsResult', 'Por favor selecciona un archivo CSV', false);
+                    return;
+                }
+                
+                // Validar archivo
+                const validation = await Utils.validateFile(file);
+                if (!validation.valid) {
+                    Utils.showResult('productsResult', validation.message, false);
+                    return;
+                }
+                
+                // Preparar UI
+                const uploadBtn = document.getElementById('uploadProductsBtn');
+                const originalBtnText = uploadBtn.innerHTML;
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> Procesando...';
+                
+                // Mostrar barra de progreso
+                const progressContainer = document.getElementById('productsProgress');
+                const progressBar = document.getElementById('productsProgressBar');
+                progressContainer.style.display = 'block';
+                progressBar.style.width = '0%';
+                
+                try {
+                    // Leer el archivo como texto
+                    const csvText = await readFileAsText(file);
+                    
+                    // Convertir CSV a JSON
+                    const jsonData = csvToJson(csvText);
+                    
+                    // Obtener configuración
+                    const config = await getConfigCache();
+                    const apiUrl = `${config.API_BASE_URL}/addProductsCsv`;
+                    
+                    // Crear FormData con el JSON
+                    const formData = new FormData();
+                    formData.append('data', JSON.stringify(jsonData));
+                    
+                    console.log('Enviando solicitud a:', apiUrl);
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    console.log('Respuesta recibida:', response.status, response.statusText);
+                    
+                    // Procesar respuesta
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log('Resultado:', result);
+                        Utils.showResult('productsResult', result.message || 'Productos cargados exitosamente', true);
+                    } else {
+                        const errorData = await response.json().catch(() => ({}));
+                        console.error('Error en la respuesta:', errorData);
+                        Utils.showResult('productsResult', errorData.message || 'Error al cargar productos', false);
+                    }
+                } catch (error) {
+                    console.error('Error al cargar productos:', error);
+                    Utils.showResult('productsResult', `Error: ${error.message}`, false);
+                } finally {
+                    // Restaurar estado del botón
+                    uploadBtn.disabled = false;
+                    uploadBtn.innerHTML = originalBtnText;
+                }
+            });
+        }
+    });
 });
 
 // Configurar input de productos cuando se abra el modal
