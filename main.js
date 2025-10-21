@@ -673,44 +673,74 @@ document.addEventListener('keydown', function(event) {
 });
 
 // Event listeners para los formularios
-document.getElementById('variationsForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const file = document.getElementById('variationsFile').files[0];
-    
-    const validation = Utils.validateFile(file);
-    if (!validation.valid) {
-        Utils.showResult('variationsResult', validation.message, false);
-        return;
-    }
-    
-    await Utils.uploadFile(
-        file, 
-        '/upload-variations-csv', 
-        'variationsProgress', 
-        'variationsProgressBar', 
-        'variationsResult', 
-        'uploadVariationsBtn'
-    );
-});
+console.log('Configurando event listeners para formularios');
 
-document.getElementById('complementsForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const file = document.getElementById('complementsFile').files[0];
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM completamente cargado');
     
-    const validation = Utils.validateFile(file);
-    if (!validation.valid) {
-        Utils.showResult('complementsResult', validation.message, false);
-        return;
+    const variationsForm = document.getElementById('variationsForm');
+    const complementsForm = document.getElementById('complementsForm');
+    
+    console.log('Formularios encontrados:', { 
+        variationsForm: !!variationsForm, 
+        complementsForm: !!complementsForm 
+    });
+    
+    if (variationsForm) {
+        console.log('Añadiendo event listener a variationsForm');
+        variationsForm.addEventListener('submit', async (e) => {
+            console.log('Evento submit de variationsForm capturado');
+            e.preventDefault();
+            const file = document.getElementById('variationsFile').files[0];
+            console.log('Archivo seleccionado:', file ? { name: file.name, size: file.size, type: file.type } : 'No file');
+            
+            const validation = Utils.validateFile(file);
+            console.log('Resultado de validación:', validation);
+            if (!validation.valid) {
+                console.log('Validación fallida, mostrando error');
+                Utils.showResult('variationsResult', validation.message, false);
+                return;
+            }
+            
+            console.log('Iniciando uploadFile para variaciones');
+            await Utils.uploadFile(
+                file, 
+                '/upload-variations-csv', 
+                'variationsProgress', 
+                'variationsProgressBar', 
+                'variationsResult', 
+                'uploadVariationsBtn'
+            );
+        });
     }
     
-    await Utils.uploadFile(
-        file, 
-        '/upload-complements-csv', 
-        'complementsProgress', 
-        'complementsProgressBar', 
-        'complementsResult', 
-        'uploadComplementsBtn'
-    );
+    if (complementsForm) {
+        console.log('Añadiendo event listener a complementsForm');
+        complementsForm.addEventListener('submit', async (e) => {
+            console.log('Evento submit de complementsForm capturado');
+            e.preventDefault();
+            const file = document.getElementById('complementsFile').files[0];
+            console.log('Archivo seleccionado:', file ? { name: file.name, size: file.size, type: file.type } : 'No file');
+            
+            const validation = Utils.validateFile(file);
+            console.log('Resultado de validación:', validation);
+            if (!validation.valid) {
+                console.log('Validación fallida, mostrando error');
+                Utils.showResult('complementsResult', validation.message, false);
+                return;
+            }
+            
+            console.log('Iniciando uploadFile para complementos');
+            await Utils.uploadFile(
+                file, 
+                '/upload-complements-csv', 
+                'complementsProgress', 
+                'complementsProgressBar', 
+                'complementsResult', 
+                'uploadComplementsBtn'
+            );
+        });
+    }
 });
 
 // Configurar input de productos cuando se abra el modal
