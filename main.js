@@ -675,8 +675,57 @@ document.addEventListener('keydown', function(event) {
 // Event listeners para los formularios
 console.log('Configurando event listeners para formularios');
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM completamente cargado');
+function readFileAsText(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = event => resolve(event.target.result);
+            reader.onerror = error => reject(error);
+            reader.readAsText(file);
+        });
+    }
+    
+    function csvToJson(csvText) {
+        const lines = csvText.split('\n');
+        const headers = lines[0].split(',').map(header => header.trim());
+        const result = [];
+        
+        for (let i = 1; i < lines.length; i++) {
+            if (!lines[i].trim()) continue; // Saltar líneas vacías
+            
+            const values = lines[i].split(',').map(value => value.trim());
+            const obj = {};
+            
+            for (let j = 0; j < headers.length; j++) {
+                obj[headers[j]] = values[j] || '';
+            }
+            
+            result.push(obj);
+        }
+        
+        return result;
+    }
+
+// Configurar input de productos cuando se abra el modal
+document.getElementById('productsModal').addEventListener('transitionend', function() {
+    if (this.classList.contains('show')) {
+        Utils.setupFileInput('productsFile');
+    }
+});
+
+// Event listener principal
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        console.log('=== INICIALIZANDO DASHBOARD ===');
+        
+        // Esperar a que se carguen las variables de entorno
+        await window.envLoaded;
+        console.log('Variables de entorno disponibles');
+        
+        // Cargar categorías automáticamente
+        await loadCategories();
+        console.log('Dashboard inicializado correctamente');
+
+        console.log('DOM completamente cargado');
     
     const variationsForm = document.getElementById('variationsForm');
     const complementsForm = document.getElementById('complementsForm');
@@ -744,46 +793,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Event listeners para variationsForm y complementsForm que ya existen
-    
-    // Añadir event listener para productsForm
-    // Agregar estas funciones auxiliares al principio del archivo o donde sea apropiado
-    function readFileAsText(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = event => resolve(event.target.result);
-            reader.onerror = error => reject(error);
-            reader.readAsText(file);
-        });
-    }
-    
-    function csvToJson(csvText) {
-        const lines = csvText.split('\n');
-        const headers = lines[0].split(',').map(header => header.trim());
-        const result = [];
-        
-        for (let i = 1; i < lines.length; i++) {
-            if (!lines[i].trim()) continue; // Saltar líneas vacías
-            
-            const values = lines[i].split(',').map(value => value.trim());
-            const obj = {};
-            
-            for (let j = 0; j < headers.length; j++) {
-                obj[headers[j]] = values[j] || '';
-            }
-            
-            result.push(obj);
-        }
-        
-        return result;
-    }
-    
-    // Reemplazar el código existente del manejador del formulario de productos
-    document.addEventListener('DOMContentLoaded', async function() {
-        // ... código existente ...
-        
-        // Configurar el formulario de productos
-        const productsForm = document.getElementById('productsForm');
+    const productsForm = document.getElementById('productsForm');
         if (productsForm) {
             productsForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -858,28 +868,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
-    });
-});
-
-// Configurar input de productos cuando se abra el modal
-document.getElementById('productsModal').addEventListener('transitionend', function() {
-    if (this.classList.contains('show')) {
-        Utils.setupFileInput('productsFile');
-    }
-});
-
-// Event listener principal
-document.addEventListener('DOMContentLoaded', async function() {
-    try {
-        console.log('=== INICIALIZANDO DASHBOARD ===');
-        
-        // Esperar a que se carguen las variables de entorno
-        await window.envLoaded;
-        console.log('Variables de entorno disponibles');
-        
-        // Cargar categorías automáticamente
-        await loadCategories();
-        console.log('Dashboard inicializado correctamente');
         
     } catch (error) {
         console.error('Error inicializando dashboard:', error);
