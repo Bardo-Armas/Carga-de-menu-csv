@@ -675,7 +675,30 @@ document.addEventListener('keydown', function(event) {
 // Event listeners para los formularios
 console.log('Configurando event listeners para formularios');
 
-function readFileAsText(file) {
+
+
+// Configurar input de productos cuando se abra el modal
+document.getElementById('productsModal').addEventListener('transitionend', function() {
+    if (this.classList.contains('show')) {
+        Utils.setupFileInput('productsFile');
+    }
+});
+
+// Event listener principal
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        console.log('=== INICIALIZANDO DASHBOARD ===');
+        
+        // Esperar a que se carguen las variables de entorno
+        await window.envLoaded;
+        console.log('Variables de entorno disponibles');
+        
+        // Cargar categorías automáticamente
+        await loadCategories();
+        console.log('Dashboard inicializado correctamente');
+
+        console.log('DOM completamente cargado');
+        function readFileAsText(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = event => resolve(event.target.result);
@@ -704,28 +727,6 @@ function readFileAsText(file) {
         
         return result;
     }
-
-// Configurar input de productos cuando se abra el modal
-document.getElementById('productsModal').addEventListener('transitionend', function() {
-    if (this.classList.contains('show')) {
-        Utils.setupFileInput('productsFile');
-    }
-});
-
-// Event listener principal
-document.addEventListener('DOMContentLoaded', async function() {
-    try {
-        console.log('=== INICIALIZANDO DASHBOARD ===');
-        
-        // Esperar a que se carguen las variables de entorno
-        await window.envLoaded;
-        console.log('Variables de entorno disponibles');
-        
-        // Cargar categorías automáticamente
-        await loadCategories();
-        console.log('Dashboard inicializado correctamente');
-
-        console.log('DOM completamente cargado');
     
     const variationsForm = document.getElementById('variationsForm');
     const complementsForm = document.getElementById('complementsForm');
