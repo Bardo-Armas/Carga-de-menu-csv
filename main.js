@@ -743,6 +743,79 @@ document.addEventListener('DOMContentLoaded', function() {
             );
         });
     }
+    
+    // Event listeners para variationsForm y complementsForm que ya existen
+    
+    // Añadir event listener para productsForm
+    const productsForm = document.getElementById('productsForm');
+    if (productsForm) {
+        console.log('Añadiendo event listener a productsForm');
+        productsForm.addEventListener('submit', async (e) => {
+            console.log('Evento submit de productsForm capturado');
+            e.preventDefault();
+            const file = document.getElementById('productsFile').files[0];
+            console.log('Archivo seleccionado:', file ? { name: file.name, size: file.size, type: file.type } : 'No file');
+            
+            // Validar el archivo antes de proceder
+            const validation = await Utils.validateFile(file);
+            console.log('Resultado de validación:', validation);
+            if (!validation.valid) {
+                console.log('Validación fallida, mostrando error');
+                Utils.showResult('productsResult', validation.message, false);
+                return;
+            }
+            
+            console.log('Iniciando carga de productos');
+            
+            // Crear FormData y añadir el archivo
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // Actualizar estado del botón
+            const uploadBtn = document.getElementById('uploadProductsBtn');
+            const originalBtnText = uploadBtn.innerHTML;
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<span class="spinner"></span> Cargando...';
+            
+            // Mostrar barra de progreso
+            const progressContainer = document.getElementById('productsProgress');
+            const progressBar = document.getElementById('productsProgressBar');
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            
+            try {
+                // Obtener configuración
+                const config = await getConfigCache();
+                const apiUrl = `${config.API_URL}/addProductsCsv`;
+                
+                console.log('Enviando solicitud a:', apiUrl);
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('Respuesta recibida:', response.status, response.statusText);
+                
+                // Procesar respuesta
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Resultado:', result);
+                    Utils.showResult('productsResult', result.message || 'Productos cargados exitosamente', true);
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error('Error en la respuesta:', errorData);
+                    Utils.showResult('productsResult', errorData.message || 'Error al cargar productos', false);
+                }
+            } catch (error) {
+                console.error('Error al cargar productos:', error);
+                Utils.showResult('productsResult', `Error: ${error.message}`, false);
+            } finally {
+                // Restaurar estado del botón
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = originalBtnText;
+            }
+        });
+    }
 });
 
 // Configurar input de productos cuando se abra el modal
