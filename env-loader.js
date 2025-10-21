@@ -48,8 +48,8 @@ class EnvLoader {
                         console.warn('Archivo .env no encontrado, usando valores por defecto para desarrollo');
                         // Valores por defecto para desarrollo
                         const defaultEnvVars = {
-                            API_BASE_URL: 'https://da-pw.tupide.mx/api/menu-mc',
-                            LOGIN_API_URL: 'https://control.da-pw.mx/api/panel-administrativo/admins/subitoInterno',
+                            API_BASE_URL: 'Entorno prueba',
+                            LOGIN_API_URL: 'Entorno prueba',
                             AUTH_USER_KEY: 'auth_user',
                             AUTH_SESSION_KEY: 'auth_session',
                             ALLOWED_ROLES: 'Call-center,Administrador,Dirección'

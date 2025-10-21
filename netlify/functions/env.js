@@ -10,8 +10,8 @@ exports.handler = async function(event, context) {
   try {
     // Devolver las variables de entorno
     const envVars = {
-      API_BASE_URL: process.env.API_BASE_URL || 'https://da-pw.tupide.mx/api/menu-mc',
-      LOGIN_API_URL: process.env.LOGIN_API_URL || 'https://control.da-pw.mx/api/panel-administrativo/admins/subitoInterno',
+      API_BASE_URL: process.env.API_BASE_URL || 'Entorno prueba',
+      LOGIN_API_URL: process.env.LOGIN_API_URL || 'Entorno prueba',
       AUTH_USER_KEY: process.env.AUTH_USER_KEY || 'auth_user',
       AUTH_SESSION_KEY: process.env.AUTH_SESSION_KEY || 'auth_session',
       ALLOWED_ROLES: process.env.ALLOWED_ROLES || 'Call-center,Administrador,Dirección'

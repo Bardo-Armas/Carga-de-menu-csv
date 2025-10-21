@@ -55,7 +55,7 @@ async function openRestaurantsModal(categoryId, categoryName) {
         } catch (configError) {
             console.error('Error obteniendo configuración:', configError);
             // Fallback a una variable global si existe
-            apiBaseUrl = window.API_BASE_URL || 'https://da-pw.tupide.mx/api/menu-mc';
+            apiBaseUrl = window.API_BASE_URL || 'Entorno prueba';
         }
         
         const response = await fetch(`${apiBaseUrl}/restaurants/category/${categoryId}`);
@@ -234,7 +234,7 @@ async function loadProducts(restaurantId, restaurantName) {
         } catch (configError) {
             console.error('Error obteniendo configuración:', configError);
             // Fallback a una variable global si existe
-            apiBaseUrl = window.API_BASE_URL || 'https://da-pw.tupide.mx/api/menu-mc';
+            apiBaseUrl = window.API_BASE_URL || 'Entorno prueba';
         }
         
         // Cargar productos
@@ -512,7 +512,7 @@ async function uploadFile(file, endpoint, progressId, progressBarId, resultId, b
         } catch (configError) {
             console.error('Error obteniendo configuración:', configError);
             // Fallback a una variable global si existe
-            apiBaseUrl = window.API_BASE_URL || 'https://da-pw.tupide.mx/api/menu-mc';
+            apiBaseUrl = window.API_BASE_URL || 'Entorno prueba';
         }
         
         const response = await fetch(`${apiBaseUrl}${endpoint}`, {
