@@ -786,7 +786,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 // Obtener configuración
                 const config = await getConfigCache();
-                const apiUrl = `${config.API_URL}/addProductsCsv`;
+                const apiUrl = `${config.API_BASE_URL}/addProductsCsv`;
                 
                 console.log('Enviando solicitud a:', apiUrl);
                 const response = await fetch(apiUrl, {
