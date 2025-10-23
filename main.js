@@ -699,149 +699,182 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         console.log('DOM completamente cargado');
         function readFileAsText(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = event => resolve(event.target.result);
-            reader.onerror = error => reject(error);
-            reader.readAsText(file);
-        });
-    }
-    
-    function csvToJson(csvText) {
-        const lines = csvText.split('\n');
-        const headers = lines[0].split(',').map(header => header.trim());
-        const result = [];
-        
-        for (let i = 1; i < lines.length; i++) {
-            if (!lines[i].trim()) continue; // Saltar líneas vacías
-            
-            const values = lines[i].split(',').map(value => value.trim());
-            const obj = {};
-            
-            for (let j = 0; j < headers.length; j++) {
-                obj[headers[j]] = values[j] || '';
-            }
-            
-            result.push(obj);
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = event => resolve(event.target.result);
+                reader.onerror = error => reject(error);
+                reader.readAsText(file);
+            });
         }
         
-        return result;
-    }
-    
-    const variationsForm = document.getElementById('variationsForm');
-    const complementsForm = document.getElementById('complementsForm');
-    
-    console.log('Formularios encontrados:', { 
-        variationsForm: !!variationsForm, 
-        complementsForm: !!complementsForm 
-    });
-    
-    if (variationsForm) {
-        console.log('Añadiendo event listener a variationsForm');
-        variationsForm.addEventListener('submit', async (e) => {
-            console.log('Evento submit de variationsForm capturado');
-            e.preventDefault();
-            const file = document.getElementById('variationsFile').files[0];
-            console.log('Archivo seleccionado:', file ? { name: file.name, size: file.size, type: file.type } : 'No file');
-            
-            // Añadir await aquí para esperar el resultado de la validación
-            const validation = await Utils.validateFile(file);
-            console.log('Resultado de validación:', validation);
-            if (!validation.valid) {
-                console.log('Validación fallida, mostrando error');
-                Utils.showResult('variationsResult', validation.message, false);
-                return;
-            }
-            
-            console.log('Iniciando uploadFile para variaciones');
-            await Utils.uploadFile(
-                file, 
-                '/upload-variations-csv', 
-                'variationsProgress', 
-                'variationsProgressBar', 
-                'variationsResult', 
-                'uploadVariationsBtn'
-            );
+        // Reemplazar csvToJson por versión con PapaParse
+        function csvToJson(csvText) {
+            return new Promise((resolve, reject) => {
+                try {
+                    if (typeof Papa === 'undefined') {
+                        return reject(new Error('PapaParse no está cargado'));
+                    }
+                    Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: true,
+                        transformHeader: (h) => (h || '').trim(),
+                        complete: (results) => resolve(results.data),
+                        error: (err) => reject(err),
+                    });
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        }
+        
+        // Helpers para normalizar números y sanitizar filas
+        function castNumericNormalized(value, defaultValue = 0) {
+            if (value === undefined || value === null) return defaultValue;
+            const trimmed = String(value).trim();
+            if (trimmed === '') return defaultValue;
+            const normalized = trimmed
+                .replace(/\s/g, '')
+                .replace(/\./g, '')       // quita puntos de miles si los hay
+                .replace(/,/g, '.');      // convierte coma decimal a punto
+            const num = Number(normalized.replace(/[^0-9.\-]/g, ''));
+            return Number.isNaN(num) ? defaultValue : num;
+        }
+        
+        function sanitizeRow(row) {
+            const out = { ...row };
+            Object.keys(out).forEach((k) => {
+                if (typeof out[k] === 'string') out[k] = out[k].trim();
+            });
+            out['Costo'] = castNumericNormalized(out['Costo'], 0);
+            out['Cantidad'] = castNumericNormalized(out['Cantidad'], 0);
+            out['id'] = castNumericNormalized(out['id'], 0);
+            return out;
+        }
+        const variationsForm = document.getElementById('variationsForm');
+        const complementsForm = document.getElementById('complementsForm');
+        
+        console.log('Formularios encontrados:', { 
+            variationsForm: !!variationsForm, 
+            complementsForm: !!complementsForm 
         });
-    }
-    
-    if (complementsForm) {
-        console.log('Añadiendo event listener a complementsForm');
-        complementsForm.addEventListener('submit', async (e) => {
-            console.log('Evento submit de complementsForm capturado');
-            e.preventDefault();
-            const file = document.getElementById('complementsFile').files[0];
-            console.log('Archivo seleccionado:', file ? { name: file.name, size: file.size, type: file.type } : 'No file');
-            
-            // Añadir await aquí para esperar el resultado de la validación
-            const validation = await Utils.validateFile(file);
-            console.log('Resultado de validación:', validation);
-            if (!validation.valid) {
-                console.log('Validación fallida, mostrando error');
-                Utils.showResult('complementsResult', validation.message, false);
-                return;
-            }
-            
-            console.log('Iniciando uploadFile para complementos');
-            await Utils.uploadFile(
-                file, 
-                '/upload-complements-csv', 
-                'complementsProgress', 
-                'complementsProgressBar', 
-                'complementsResult', 
-                'uploadComplementsBtn'
-            );
-        });
-    }
-    
-    const productsForm = document.getElementById('productsForm');
-    if (productsForm) {
-        productsForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const fileInput = document.getElementById('productsFile');
-            const file = fileInput?.files?.[0];
-            if (!file) {
-                alert('Selecciona un archivo CSV.');
-                return;
-            }
-
-            try {
-                const csvText = await readFileAsText(file);
-                const rows = await csvToJson(csvText);
-
-                // Sanitiza y normaliza tipos
-                const jsonData = rows.map(sanitizeRow);
-
-                const config = await getConfigCache();
-                const apiUrl = `${config.API_BASE_URL}/addProductsCsv`;
-
-                // Envía como JSON con la clave "data"
-                const resp = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: jsonData }),
-                });
-
-                const result = await resp.json().catch(() => null);
-                if (!resp.ok || result?.success === false) {
-                    console.error('Error API:', result);
-                    alert(`Error API: ${result?.message || resp.statusText}`);
+        
+        if (variationsForm) {
+            console.log('Añadiendo event listener a variationsForm');
+            variationsForm.addEventListener('submit', async (e) => {
+                console.log('Evento submit de variationsForm capturado');
+                e.preventDefault();
+                const file = document.getElementById('variationsFile').files[0];
+                console.log('Archivo seleccionado:', file ? { name: file.name, size: file.size, type: file.type } : 'No file');
+                
+                // Añadir await aquí para esperar el resultado de la validación
+                const validation = await Utils.validateFile(file);
+                console.log('Resultado de validación:', validation);
+                if (!validation.valid) {
+                    console.log('Validación fallida, mostrando error');
+                    Utils.showResult('variationsResult', validation.message, false);
                     return;
                 }
-
-                alert('Productos cargados correctamente.');
-                console.log('Respuesta API:', result);
-            } catch (err) {
-                console.error('Error procesando CSV:', err);
-                alert(`Error procesando CSV: ${err.message}`);
-            }
-        });
-    }
+                
+                console.log('Iniciando uploadFile para variaciones');
+                await Utils.uploadFile(
+                    file, 
+                    '/upload-variations-csv', 
+                    'variationsProgress', 
+                    'variationsProgressBar', 
+                    'variationsResult', 
+                    'uploadVariationsBtn'
+                );
+            });
+        }
         
-    } catch (error) {
-        console.error('Error inicializando dashboard:', error);
-        alert(`Error al inicializar dashboard: ${error.message}`);
-    }
+        if (complementsForm) {
+            console.log('Añadiendo event listener a complementsForm');
+            complementsForm.addEventListener('submit', async (e) => {
+                console.log('Evento submit de complementsForm capturado');
+                e.preventDefault();
+                const file = document.getElementById('complementsFile').files[0];
+                console.log('Archivo seleccionado:', file ? { name: file.name, size: file.size, type: file.type } : 'No file');
+                
+                // Añadir await aquí para esperar el resultado de la validación
+                const validation = await Utils.validateFile(file);
+                console.log('Resultado de validación:', validation);
+                if (!validation.valid) {
+                    console.log('Validación fallida, mostrando error');
+                    Utils.showResult('complementsResult', validation.message, false);
+                    return;
+                }
+                
+                console.log('Iniciando uploadFile para complementos');
+                await Utils.uploadFile(
+                    file, 
+                    '/upload-complements-csv', 
+                    'complementsProgress', 
+                    'complementsProgressBar', 
+                    'complementsResult', 
+                    'uploadComplementsBtn'
+                );
+            });
+        }
+        const productsForm = document.getElementById('productsForm');
+            if (productsForm) {
+                productsForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const fileInput = document.getElementById('productsFile');
+                    const file = fileInput?.files?.[0];
+                    if (!file) {
+                        alert('Selecciona un archivo CSV.');
+                        return;
+                    }
+                    
+                    try {
+                        const csvText = await readFileAsText(file);
+                        const rows = await csvToJson(csvText);
+                        
+                        // Usa sanitizeRow para normalizar tipos
+                        const jsonData = rows.map(sanitizeRow);
+                        
+                        const config = await getConfigCache();
+                        const apiUrl = `${config.API_BASE_URL}/addProductsCsv`;
+                        
+                        console.log('Enviando solicitud a:', apiUrl);
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                data: jsonData
+                            })
+                        });
+                        
+                        console.log('Respuesta recibida:', response.status, response.statusText);
+                        
+                        // Procesar respuesta
+                        if (response.ok) {
+                            const result = await response.json();
+                            console.log('Resultado:', result);
+                            Utils.showResult('productsResult', result.message || 'Productos cargados exitosamente', true);
+                        } else {
+                            const errorData = await response.json().catch(() => ({}));
+                            console.error('Error en la respuesta:', errorData);
+                            Utils.showResult('productsResult', errorData.message || 'Error al cargar productos', false);
+                        }
+                    } catch (error) {
+                        console.error('Error al cargar productos:', error);
+                        Utils.showResult('productsResult', `Error: ${error.message}`, false);
+                    } finally {
+                        // Restaurar estado del botón
+                        uploadBtn.disabled = false;
+                        uploadBtn.innerHTML = originalBtnText;
+                    }
+                });
+            }
+            
+        } catch (error) {
+            console.error('Error inicializando dashboard:', error);
+            alert(`Error al inicializar dashboard: ${error.message}`);
+        }
 });
 
 // Función para obtener configuración con cache
