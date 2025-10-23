@@ -707,7 +707,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
         
-        // Reemplazar csvToJson por versión con PapaParse
+        // Reemplaza csvToJson para usar PapaParse
         function csvToJson(csvText) {
             return new Promise((resolve, reject) => {
                 try {
@@ -727,14 +727,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
         }
         
-        // Helpers para normalizar números y sanitizar filas
+        // Helpers para normalizar números y sanitizar filas (asegura que existan)
         function castNumericNormalized(value, defaultValue = 0) {
             if (value === undefined || value === null) return defaultValue;
             const trimmed = String(value).trim();
             if (trimmed === '') return defaultValue;
             const normalized = trimmed
                 .replace(/\s/g, '')
-                .replace(/\./g, '')       // quita puntos de miles si los hay
+                .replace(/\./g, '')       // quita puntos de miles si existen
                 .replace(/,/g, '.');      // convierte coma decimal a punto
             const num = Number(normalized.replace(/[^0-9.\-]/g, ''));
             return Number.isNaN(num) ? defaultValue : num;
@@ -815,70 +815,84 @@ document.addEventListener('DOMContentLoaded', async function() {
                 );
             });
         }
-        const productsForm = document.getElementById('productsForm');
-            if (productsForm) {
-                productsForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    
-                    const fileInput = document.getElementById('productsFile');
-                    const file = fileInput?.files?.[0];
-                    if (!file) {
-                        alert('Selecciona un archivo CSV.');
-                        return;
-                    }
-                    
-                    // Referencias UI
-                    const uploadBtn = document.getElementById('uploadProductsBtn');
-                    const originalBtnHTML = uploadBtn.innerHTML;
-                    uploadBtn.disabled = true;
-                    uploadBtn.innerText = 'Cargando...';
-                    
-                    // Mostrar barra de progreso
-                    const progressInterval = Utils.showProgress('productsProgress', 'productsProgressBar', 'Procesando CSV...');
-                    
-                    try {
-                        const csvText = await readFileAsText(file);
-                        const rows = await csvToJson(csvText);
-                        
-                        // Normalizar filas antes de enviar
-                        const jsonData = rows.map(sanitizeRow);
-                        
-                        const config = await getConfigCache();
-                        const apiUrl = `${config.API_BASE_URL}/addProductsCsv`;
-                        
-                        console.log('Enviando solicitud a:', apiUrl);
-                        const response = await fetch(apiUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                data: jsonData
-                            })
-                        });
-                        
-                        console.log('Respuesta recibida:', response.status, response.statusText);
-                        
-                        // Procesar respuesta
-                        if (response.ok) {
-                            const result = await response.json();
-                            console.log('Resultado:', result);
-                            Utils.showResult('productsResult', result.message || 'Productos cargados exitosamente', true);
-                        } else {
-                            const errorData = await response.json().catch(() => ({}));
-                            console.error('Error en la respuesta:', errorData);
-                            Utils.showResult('productsResult', errorData.message || 'Error al cargar productos', false);
-                        }
-                    } catch (error) {
-                        console.error('Error al cargar productos:', error);
-                        Utils.showResult('productsResult', `Error: ${error.message}`, false);
-                    } finally {
-                        // Restaurar estado del botón
-                        uploadBtn.disabled = false;
-                        uploadBtn.innerHTML = originalBtnText;
-                    }
-                });
+        // Helper para manejar estado de "Cargando" del botón de forma robusta
+        function setButtonLoading(btn, loading, loadingText = 'Cargando...') {
+            if (!btn) return;
+            if (loading) {
+                if (!btn.dataset.originalHtml) {
+                    btn.dataset.originalHtml = btn.innerHTML;
+                }
+                btn.disabled = true;
+                btn.innerText = loadingText;
+            } else {
+                btn.disabled = false;
+                if (btn.dataset.originalHtml) {
+                    btn.innerHTML = btn.dataset.originalHtml;
+                } else {
+                    btn.innerText = 'Cargar Productos';
+                }
             }
+        }
+        
+        const productsForm = document.getElementById('productsForm');
+        if (productsForm && !productsForm.dataset.listenerBound) {
+            productsForm.dataset.listenerBound = 'true'; // evita duplicar el listener
+        
+            productsForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+        
+                const uploadBtn = document.getElementById('uploadProductsBtn');
+                if (uploadBtn?.disabled) return; // evita doble submit
+        
+                const fileInput = document.getElementById('productsFile');
+                const file = fileInput?.files?.[0];
+                if (!file) {
+                    Utils.showResult('productsResult', 'Selecciona un archivo CSV.', false);
+                    return;
+                }
+        
+                // Activa UI de carga
+                setButtonLoading(uploadBtn, true);
+                const progressInterval = Utils.showProgress('productsProgress', 'productsProgressBar', 'Procesando CSV...');
+        
+                try {
+                    const csvText = await readFileAsText(file);
+                    const rows = await csvToJson(csvText);
+        
+                    // Sanitiza/normaliza tipos
+                    const jsonData = rows.map(sanitizeRow);
+        
+                    // Construir y enviar payload
+                    const config = await getConfigCache();
+                    const apiUrl = `${config.API_BASE_URL}/addProductsCsv`;
+        
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: jsonData }),
+                    });
+        
+                    const result = await response.json().catch(() => null);
+        
+                    if (!response.ok || result?.success === false) {
+                        Utils.showResult('productsResult', result?.message || 'Error al cargar productos', false);
+                    } else {
+                        Utils.showResult('productsResult', result?.message || 'Productos cargados exitosamente', true);
+                    }
+                } catch (err) {
+                    console.error('Error procesando CSV:', err);
+                    Utils.showResult('productsResult', `Error procesando CSV: ${err.message}`, false);
+                } finally {
+                    // Oculta el progreso y restablece botón SIEMPRE
+                    try { Utils.hideProgress('productsProgress', 'productsProgressBar', progressInterval); } catch {}
+                    try { Utils.hideProgress(null, null, progressInterval); } catch {}
+                    const progressContainer = document.getElementById('productsProgress');
+                    if (progressContainer) progressContainer.style.display = 'none';
+        
+                    setButtonLoading(uploadBtn, false);
+                }
+            });
+        }
             
         } catch (error) {
             console.error('Error inicializando dashboard:', error);
