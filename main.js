@@ -795,81 +795,48 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     const productsForm = document.getElementById('productsForm');
-        if (productsForm) {
-            productsForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const fileInput = document.getElementById('productsFile');
-                const file = fileInput.files[0];
-                
-                if (!file) {
-                    Utils.showResult('productsResult', 'Por favor selecciona un archivo CSV', false);
+    if (productsForm) {
+        productsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('productsFile');
+            const file = fileInput?.files?.[0];
+            if (!file) {
+                alert('Selecciona un archivo CSV.');
+                return;
+            }
+
+            try {
+                const csvText = await readFileAsText(file);
+                const rows = await csvToJson(csvText);
+
+                // Sanitiza y normaliza tipos
+                const jsonData = rows.map(sanitizeRow);
+
+                const config = await getConfigCache();
+                const apiUrl = `${config.API_BASE_URL}/addProductsCsv`;
+
+                // Envía como JSON con la clave "data"
+                const resp = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: jsonData }),
+                });
+
+                const result = await resp.json().catch(() => null);
+                if (!resp.ok || result?.success === false) {
+                    console.error('Error API:', result);
+                    alert(`Error API: ${result?.message || resp.statusText}`);
                     return;
                 }
-                
-                // Validar archivo
-                const validation = await Utils.validateFile(file);
-                if (!validation.valid) {
-                    Utils.showResult('productsResult', validation.message, false);
-                    return;
-                }
-                
-                // Preparar UI
-                const uploadBtn = document.getElementById('uploadProductsBtn');
-                const originalBtnText = uploadBtn.innerHTML;
-                uploadBtn.disabled = true;
-                uploadBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> Procesando...';
-                
-                // Mostrar barra de progreso
-                const progressContainer = document.getElementById('productsProgress');
-                const progressBar = document.getElementById('productsProgressBar');
-                progressContainer.style.display = 'block';
-                progressBar.style.width = '0%';
-                
-                try {
-                    // Leer el archivo como texto
-                    const csvText = await readFileAsText(file);
-                    
-                    // Convertir CSV a JSON
-                    const jsonData = csvToJson(csvText);
-                    
-                    // Obtener configuración
-                    const config = await getConfigCache();
-                    const apiUrl = `${config.API_BASE_URL}/addProductsCsv`;
-                    
-                    console.log('Enviando solicitud a:', apiUrl);
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            data: jsonData
-                        })
-                    });
-                    
-                    console.log('Respuesta recibida:', response.status, response.statusText);
-                    
-                    // Procesar respuesta
-                    if (response.ok) {
-                        const result = await response.json();
-                        console.log('Resultado:', result);
-                        Utils.showResult('productsResult', result.message || 'Productos cargados exitosamente', true);
-                    } else {
-                        const errorData = await response.json().catch(() => ({}));
-                        console.error('Error en la respuesta:', errorData);
-                        Utils.showResult('productsResult', errorData.message || 'Error al cargar productos', false);
-                    }
-                } catch (error) {
-                    console.error('Error al cargar productos:', error);
-                    Utils.showResult('productsResult', `Error: ${error.message}`, false);
-                } finally {
-                    // Restaurar estado del botón
-                    uploadBtn.disabled = false;
-                    uploadBtn.innerHTML = originalBtnText;
-                }
-            });
-        }
+
+                alert('Productos cargados correctamente.');
+                console.log('Respuesta API:', result);
+            } catch (err) {
+                console.error('Error procesando CSV:', err);
+                alert(`Error procesando CSV: ${err.message}`);
+            }
+        });
+    }
         
     } catch (error) {
         console.error('Error inicializando dashboard:', error);
