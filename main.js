@@ -827,11 +827,20 @@ document.addEventListener('DOMContentLoaded', async function() {
                         return;
                     }
                     
+                    // Referencias UI
+                    const uploadBtn = document.getElementById('uploadProductsBtn');
+                    const originalBtnHTML = uploadBtn.innerHTML;
+                    uploadBtn.disabled = true;
+                    uploadBtn.innerText = 'Cargando...';
+                    
+                    // Mostrar barra de progreso
+                    const progressInterval = Utils.showProgress('productsProgress', 'productsProgressBar', 'Procesando CSV...');
+                    
                     try {
                         const csvText = await readFileAsText(file);
                         const rows = await csvToJson(csvText);
                         
-                        // Usa sanitizeRow para normalizar tipos
+                        // Normalizar filas antes de enviar
                         const jsonData = rows.map(sanitizeRow);
                         
                         const config = await getConfigCache();
