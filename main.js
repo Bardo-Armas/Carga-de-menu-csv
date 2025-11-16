@@ -838,6 +838,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (productsForm && !productsForm.dataset.listenerBound) {
             productsForm.dataset.listenerBound = 'true'; // evita duplicar el listener
         
+            // Dentro del handler de submit de productos
             productsForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
         
@@ -859,17 +860,39 @@ document.addEventListener('DOMContentLoaded', async function() {
                     const csvText = await readFileAsText(file);
                     const rows = await csvToJson(csvText);
         
-                    // Sanitiza/normaliza tipos
-                    const jsonData = rows.map(sanitizeRow);
+                    // Construir payload respetando columnas, con Address opcional
+                    const payloadRows = rows.map((r) => {
+                        const record = {
+                            Establecimiento: (r['Establecimiento'] || '').trim(),
+                            Picture: (r['Picture'] || '').trim(),
+                            'Nombre del producto': (r['Nombre del producto'] || '').trim(),
+                            Descripcion: (r['Descripcion'] || '').trim(),
+                            Cantidad: (() => {
+                                const n = castNumericNormalized(r['Cantidad']);
+                                return Number.isFinite(n) ? n : 0;
+                            })(),
+                            Costo: (() => {
+                                const n = castNumericNormalized(r['Costo']);
+                                return Number.isFinite(n) ? n : 0;
+                            })(),
+                            Categoria: (r['Categoria'] || '').trim(),
+                            id: (r['id'] || '').trim(),
+                            Subcategoria: (r['Subcategoria'] || '').trim(),
+                        };
         
-                    // Construir y enviar payload
+                        const address = (r['Address'] ?? '').toString().trim();
+                        if (address) record.Address = address;
+        
+                        return record;
+                    });
+        
                     const config = await getConfigCache();
                     const apiUrl = `${config.API_BASE_URL}/addProductsCsv`;
         
                     const response = await fetch(apiUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ data: jsonData }),
+                        body: JSON.stringify({ data: payloadRows }),
                     });
         
                     const result = await response.json().catch(() => null);
