@@ -219,7 +219,9 @@ Utils.fetchJSON = async function(url, options = {}) {
 // Función para mostrar resultado
 function showResult(resultId, message, isSuccess) {
     const resultDiv = document.getElementById(resultId);
-    resultDiv.textContent = message;
+    // Escapar HTML para evitar XSS y convertir saltos de línea a <br>
+    const safe = message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    resultDiv.innerHTML = safe.replace(/\n/g, '<br>');
     resultDiv.className = `result ${isSuccess ? 'success' : 'error'}`;
     resultDiv.style.display = 'block';
 }
