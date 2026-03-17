@@ -1478,7 +1478,9 @@
 
     <script>
         // Configuración de la API
-        const API_BASE_URL = 'https://da-pw.tupide.mx/api/menu-mc';
+        // const API_BASE_URL = 'https://da-pw.tupide.mx/api/menu-mc';
+        const API_BASE_URL = 'https://control.da-pw.mx/api/panel-administrativo/menu-mc';
+        // const API_BASE_URL = 'http://172.22.176.1:8001/api/panel-administrativo/menu-mc';
 
         // Variables globales para categorías
         let categories = [];
@@ -2185,7 +2187,7 @@
             const progressInterval = showProgress('productsProgress', 'productsProgressBar');
             
             try {
-                const response = await fetch(`${API_BASE_URL}/addProductsCsv`, {
+                const response = await fetch(`${API_BASE_URL}/products/add-by-csv`, {
                     method: 'POST',
                     body: formData,
                     headers: {

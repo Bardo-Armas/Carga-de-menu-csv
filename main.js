@@ -61,7 +61,7 @@ async function openRestaurantsModal(categoryId, categoryName) {
         const response = await fetch(`${apiBaseUrl}/restaurants/category/${categoryId}`);
         const result = await response.json();
         
-        if (result.success && result.data) {
+        if ((result.success || result.status) && result.data) {
             currentRestaurants = result.data;
             renderRestaurants(result.data);
         } else {
@@ -155,7 +155,7 @@ async function loadCategories() {
         const response = await fetch(`${config.API_BASE_URL}/categories/active`);
         const result = await response.json();
         
-        if (result.success) {
+        if (result.success || result.status) {
             categories = result.data;
             renderCategories();
         } else {
@@ -241,7 +241,7 @@ async function loadProducts(restaurantId, restaurantName) {
         const response = await fetch(`${apiBaseUrl}/products/restaurant/${restaurantId}`);
         const result = await response.json();
         
-        if (result.success && result.data) {
+        if ((result.success || result.status) && result.data) {
             currentProducts = result.data;
             groupProductsByCategory(result.data);
             renderProducts();
@@ -525,7 +525,7 @@ async function uploadFile(file, endpoint, progressId, progressBarId, resultId, b
         progressElement.style.display = 'none';
         resultElement.style.display = 'block';
         
-        if (result.success) {
+        if (result.success || result.status) {
             resultElement.innerHTML = `<div class="success">✓ ${result.message}</div>`;
         } else {
             resultElement.innerHTML = `<div class="error">✗ ${result.message}</div>`;
@@ -774,14 +774,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                     Utils.showResult('variationsResult', validation.message, false);
                     return;
                 }
-                
+
                 console.log('Iniciando uploadFile para variaciones');
                 await Utils.uploadFile(
-                    file, 
-                    '/upload-variations-csv', 
-                    'variationsProgress', 
-                    'variationsProgressBar', 
-                    'variationsResult', 
+                    file,
+                    '/upload-variations-csv',
+                    'variationsProgress',
+                    'variationsProgressBar',
+                    'variationsResult',
                     'uploadVariationsBtn'
                 );
             });
@@ -803,14 +803,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                     Utils.showResult('complementsResult', validation.message, false);
                     return;
                 }
-                
+
                 console.log('Iniciando uploadFile para complementos');
                 await Utils.uploadFile(
-                    file, 
-                    '/upload-complements-csv', 
-                    'complementsProgress', 
-                    'complementsProgressBar', 
-                    'complementsResult', 
+                    file,
+                    '/upload-complements-csv',
+                    'complementsProgress',
+                    'complementsProgressBar',
+                    'complementsResult',
                     'uploadComplementsBtn'
                 );
             });
@@ -859,35 +859,70 @@ document.addEventListener('DOMContentLoaded', async function() {
                 try {
                     const csvText = await readFileAsText(file);
                     const rows = await csvToJson(csvText);
-        
-                    // Construir payload respetando columnas, con Address opcional
-                    const payloadRows = rows.map((r) => {
+
+                    if (!rows || rows.length === 0) {
+                        Utils.showResult('productsResult', 'El archivo CSV está vacío o no tiene filas de datos.', false);
+                        return;
+                    }
+
+                    // Filtrar filas vacías (celdas vacías al final del CSV)
+                    const filteredRows = rows.filter(r => Object.values(r).some(v => (v || '').toString().trim() !== ''));
+                    if (filteredRows.length === 0) {
+                        Utils.showResult('productsResult', 'El archivo CSV no tiene filas con datos.', false);
+                        return;
+                    }
+
+                    // Validar que las columnas requeridas existan en el CSV
+                    const requiredColumns = ['Establecimiento', 'Nombre del producto', 'Descripcion', 'Costo', 'Categoria'];
+                    const csvColumns = Object.keys(filteredRows[0]);
+                    const missingColumns = requiredColumns.filter(col => !csvColumns.includes(col));
+                    if (missingColumns.length > 0) {
+                        Utils.showResult('productsResult', `El CSV no tiene las columnas requeridas: ${missingColumns.join(', ')}`, false);
+                        return;
+                    }
+
+                    // Validar que los campos requeridos no estén vacíos en cada fila
+                    const rowErrors = [];
+                    filteredRows.forEach((r, index) => {
+                        const fila = index + 2; // +2 porque fila 1 es el header
+                        if (!(r['Establecimiento'] || '').trim()) rowErrors.push(`Fila ${fila}: "Establecimiento" está vacío`);
+                        if (!(r['Nombre del producto'] || '').trim()) rowErrors.push(`Fila ${fila}: "Nombre del producto" está vacío`);
+                        if (!(r['Categoria'] || '').trim()) rowErrors.push(`Fila ${fila}: "Categoria" está vacío`);
+                        const costo = castNumericNormalized(r['Costo']);
+                        if (!Number.isFinite(costo) || costo <= 0) rowErrors.push(`Fila ${fila}: "Costo" debe ser un número mayor a 0`);
+                    });
+
+                    if (rowErrors.length > 0) {
+                        const maxErrors = 10;
+                        let errorMsg = `Se encontraron errores en el CSV:\n• ${rowErrors.slice(0, maxErrors).join('\n• ')}`;
+                        if (rowErrors.length > maxErrors) errorMsg += `\n...y ${rowErrors.length - maxErrors} errores más.`;
+                        Utils.showResult('productsResult', errorMsg, false);
+                        return;
+                    }
+
+                    // Construir payload con los campos que espera el endpoint
+                    const payloadRows = filteredRows.map((r) => {
                         const record = {
                             Establecimiento: (r['Establecimiento'] || '').trim(),
-                            Picture: (r['Picture'] || '').trim(),
+                            Categoria: (r['Categoria'] || '').trim(),
+                            Subcategoria: (r['Subcategoria'] || '').trim(),
                             'Nombre del producto': (r['Nombre del producto'] || '').trim(),
                             Descripcion: (r['Descripcion'] || '').trim(),
-                            Cantidad: (() => {
-                                const n = castNumericNormalized(r['Cantidad']);
-                                return Number.isFinite(n) ? n : 0;
-                            })(),
                             Costo: (() => {
                                 const n = castNumericNormalized(r['Costo']);
                                 return Number.isFinite(n) ? n : 0;
                             })(),
-                            Categoria: (r['Categoria'] || '').trim(),
-                            id: (r['id'] || '').trim(),
-                            Subcategoria: (r['Subcategoria'] || '').trim(),
+                            Picture: (r['Picture'] || '').trim(),
                         };
-        
+
                         const address = (r['Address'] ?? '').toString().trim();
                         if (address) record.Address = address;
-        
+
                         return record;
                     });
         
                     const config = await getConfigCache();
-                    const apiUrl = `${config.API_BASE_URL}/addProductsCsv`;
+                    const apiUrl = `${config.API_BASE_URL}/products/add-by-csv`;
         
                     const response = await fetch(apiUrl, {
                         method: 'POST',
